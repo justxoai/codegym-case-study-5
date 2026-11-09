@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.manageDoctors})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4 d-grid gap-4">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <section th:replace="~{fragments/layout :: adminHub('doctors', ${o.doctorCount}, ${o.specialtyCount})}"></section>
+
+        <section class="row g-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminDash.kpi.doctors}">Doctors</div>
+                        <div class="cb-mini-value" th:text="${o.doctorCount}">0</div>
+                        <small class="text-secondary" th:text="#{adminDash.kpi.specialties(${o.specialtyCount})}">Specialties: 0</small>
+                    </div>
+                    <span class="cb-kpi-icon is-mint"><i class="bi bi-person-badge"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminHub.stat.free}">With open slots</div>
+                        <div class="cb-mini-value"><span th:text="${o.doctorsWithFreeSlots}">0</span><small class="text-secondary fw-medium" th:text="' / ' + ${o.doctorCount}"> / 0</small></div>
+                        <small class="text-secondary" th:text="#{adminDash.window}">next 7 days</small>
+                    </div>
+                    <span class="cb-kpi-icon"><i class="bi bi-calendar2-check"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminDash.kpi.occupancy}">Slot occupancy</div>
+                        <div class="cb-mini-value text-primary" th:text="${o.occupancyPercent} + '%'">0%</div>
+                        <small class="text-secondary" th:text="#{adminDash.window}">next 7 days</small>
+                    </div>
+                    <span class="cb-kpi-icon is-sky"><i class="bi bi-grid-3x3-gap"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminHub.stat.experience}">Average experience</div>
+                        <div class="cb-mini-value" th:text="#{adminHub.years(${#numbers.formatDecimal(o.avgExperience, 1, 1)})}">0 yrs</div>
+                        <small class="text-secondary" th:text="#{field.experienceYears}">Years of experience</small>
+                    </div>
+                    <span class="cb-kpi-icon"><i class="bi bi-award"></i></span>
+                </article>
+            </div>
+        </section>
+
+        <section class="cb-panel p-3 p-md-4 d-grid gap-3">
+            <form th:action="@{/admin/doctors}" method="get" data-autosubmit class="row g-2 align-items-center">
+                <div class="col-12 col-lg">
+                    <div class="cb-input">
+                        <i class="bi bi-search"></i>
+                        <input type="search" class="form-control" name="keyword" th:value="${keyword}" th:placeholder="#{adminHub.search}">
+                    </div>
+                </div>
+                <div class="col-12 col-sm-auto">
+                    <select class="form-select cb-select-pill" name="specialty" th:attr="aria-label=#{booking.specialty}">
+                        <option value="" th:text="#{adminHub.filter.all}">All specialties</option>
+                        <option th:each="s : ${specialties}" th:value="${s.id}" th:text="${s.localizedName}"
+                                th:selected="${specialty != null and specialty == s.id}">Specialty</option>
+                    </select>
+                </div>
+                <div class="col-12 col-sm-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-secondary"><i class="bi bi-funnel"></i> <span th:text="#{adminHub.filter.apply}">Filter</span></button>
+                    <a class="icon-btn icon-btn-tonal" th:href="@{/admin/doctors}" th:title="#{adminHub.filter.reset}" th:attr="aria-label=#{adminHub.filter.reset}"><i class="bi bi-arrow-counterclockwise"></i></a>
+                </div>
+            </form>
+
+            <div class="cb-panel text-center py-5" th:if="${doctors.isEmpty()}">
+                <span class="cb-avatar cb-avatar-lg mx-auto mb-3"><i class="bi bi-person-x"></i></span>
+                <p class="text-secondary mb-0" th:text="#{adminHub.empty}">No doctors match your filters.</p>
+            </div>
+
+            <div class="table-responsive" th:unless="${doctors.isEmpty()}">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th th:text="#{adminHub.col.doctor}">Doctor</th>
+                        <th th:text="#{booking.specialty}">Specialty</th>
+                        <th class="d-none d-md-table-cell" th:text="#{field.experienceYears}">Years</th>
+                        <th class="d-none d-lg-table-cell cb-col-load">
+                            <span th:text="#{adminHub.col.load}">Busy level</span>
+                            <i class="bi bi-info-circle text-secondary ms-1" tabindex="0" th:title="#{load.help}" th:attr="aria-label=#{load.help}"></i>
+                        </th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="d : ${doctors}" th:with="load=${o.doctorLoads.get(d.id)}">
+                        <td>
+                            <div class="d-flex align-items-center gap-3 min-w-0">
+                                <span class="cb-avatar"><i class="bi bi-person-fill"></i></span>
+                                <div class="min-w-0">
+                                    <strong class="d-block text-truncate" th:text="${d.displayName}">Dr. Name</strong>
+                                    <small class="text-secondary" th:text="${d.user.username}">doctor1</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="cb-chip" th:text="${d.specialty.localizedName}">Specialty</span></td>
+                        <td class="d-none d-md-table-cell" th:text="#{adminHub.years(${d.yearsExperience})}">5 yrs</td>
+                        <td class="d-none d-lg-table-cell cb-col-load">
+                            <th:block th:if="${load != null}">
+                                <div th:replace="~{fragments/layout :: loadBar(${load.booked}, ${load.total}, ${load.percent})}"></div>
+                            </th:block>
+                            <small class="text-secondary" th:if="${load == null}" th:text="#{load.none}">No slots yet</small>
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="icon-btn icon-btn-sm icon-btn-tertiary" th:href="@{/admin/doctors/{id}/edit(id=${d.id})}"
+                               th:title="#{common.edit}" th:attr="aria-label=#{common.edit}"><i class="bi bi-pencil"></i></a>
+                            <form class="d-inline" th:action="@{/admin/doctors/{id}/delete(id=${d.id})}" method="post"
+                                  th:attr="data-confirm=#{confirm.delete.doctor(${d.displayName})}, data-confirm-yes=#{common.delete}">
+                                <button class="icon-btn icon-btn-sm icon-btn-danger" type="submit"
+                                        th:title="#{common.delete}" th:attr="aria-label=#{common.delete}"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-grid gap-2" th:unless="${doctors.isEmpty()}">
+                <p class="small text-secondary text-center mb-0"
+                   th:text="#{adminHub.showing(${pv.from}, ${pv.to}, ${pv.total})}">Showing 1-10 of 25</p>
+                <div th:replace="~{fragments/layout :: pager(${pv})}"></div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

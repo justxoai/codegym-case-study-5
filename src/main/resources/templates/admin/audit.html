@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.audit})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4 d-grid gap-4">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <section th:replace="~{fragments/layout :: adminOps('audit', ${appointmentTotal}, ${summary.total})}"></section>
+
+        <section class="row g-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminOps.audit.today}">Entries today</div>
+                        <div class="cb-mini-value" th:text="${summary.today}">0</div>
+                        <small class="text-secondary" th:text="#{adminOps.audit.total(${summary.total})}">Total: 0</small>
+                    </div>
+                    <span class="cb-kpi-icon"><i class="bi bi-journal-text"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminOps.act.booked}">Bookings</div>
+                        <div class="cb-mini-value" th:text="${summary.bookedToday}">0</div>
+                        <small class="text-secondary" th:text="#{adminOps.audit.todayNote}">Today</small>
+                    </div>
+                    <span class="cb-kpi-icon is-mint"><i class="bi bi-calendar-plus"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminOps.act.changed}">Status changes</div>
+                        <div class="cb-mini-value" th:text="${summary.changedToday}">0</div>
+                        <small class="text-secondary" th:text="#{adminOps.audit.todayNote}">Today</small>
+                    </div>
+                    <span class="cb-kpi-icon is-sky"><i class="bi bi-arrow-repeat"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminOps.act.cancelled}">Cancellations</div>
+                        <div class="cb-mini-value" th:text="${summary.cancelledToday}">0</div>
+                        <small class="text-secondary" th:text="#{adminOps.audit.todayNote}">Today</small>
+                    </div>
+                    <span class="cb-kpi-icon is-alert"><i class="bi bi-x-circle"></i></span>
+                </article>
+            </div>
+        </section>
+
+        <section class="cb-panel p-3 p-md-4 d-grid gap-3">
+            <div>
+                <h2 class="cb-h2 fs-6 m-0" th:text="#{admin.audit.title}">Audit log</h2>
+                <p class="small text-secondary mb-0" th:text="#{admin.audit.subtitle}">Written automatically by AOP.</p>
+            </div>
+
+            <form th:action="@{/admin/audit}" method="get" data-autosubmit class="row g-2 align-items-center">
+                <input type="hidden" name="appointment" th:value="${appointmentFilter}" th:if="${appointmentFilter != null}">
+                <div class="col-12 col-xl">
+                    <div class="cb-input">
+                        <i class="bi bi-search"></i>
+                        <input type="search" class="form-control" name="keyword" th:value="${keyword}" th:placeholder="#{adminOps.audit.search}">
+                    </div>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <select class="form-select cb-select-pill" name="action" th:attr="aria-label=#{audit.action}">
+                        <option value="" th:text="#{adminOps.audit.allActions}">All actions</option>
+                        <option th:each="a : ${actions}" th:value="${a}" th:selected="${a == action}"
+                                th:text="${@auditMessages.action(a)}">Action</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <input type="date" class="form-control cb-date-input" name="date" th:value="${date}" th:attr="aria-label=#{booking.date}">
+                </div>
+                <div class="col-12 col-md-auto d-flex gap-2">
+                    <button type="submit" class="btn btn-secondary"><i class="bi bi-funnel"></i> <span th:text="#{adminHub.filter.apply}">Filter</span></button>
+                    <a class="icon-btn icon-btn-tonal" th:href="@{/admin/audit}" th:title="#{adminHub.filter.reset}" th:attr="aria-label=#{adminHub.filter.reset}"><i class="bi bi-arrow-counterclockwise"></i></a>
+                </div>
+            </form>
+
+            <div class="cb-note d-flex flex-wrap align-items-center gap-2" th:if="${appointmentFilter != null}">
+                <i class="bi bi-funnel"></i>
+                <span class="fw-semibold" th:text="#{adminOps.audit.forAppointment('#' + ${appointmentFilter})}">Showing the log of appointment #5</span>
+                <a class="small fw-semibold text-decoration-none ms-auto" th:href="@{/admin/audit}" th:text="#{adminOps.audit.clearAppointment}">Show all</a>
+            </div>
+
+            <div class="text-center py-4" th:if="${result.logs.isEmpty()}">
+                <span class="cb-avatar cb-avatar-lg mx-auto mb-3"><i class="bi bi-journal-x"></i></span>
+                <p class="text-secondary mb-0" th:text="#{adminOps.audit.empty}">No matching entries.</p>
+            </div>
+
+            <div class="table-responsive" th:unless="${result.logs.isEmpty()}">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th th:text="#{audit.time}">Time</th>
+                        <th th:text="#{audit.action}">Action</th>
+                        <th th:text="#{field.username}">User</th>
+                        <th class="d-none d-md-table-cell" th:text="#{audit.detail}">Detail</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="l : ${result.logs}">
+                        <td class="text-nowrap">
+                            <strong class="d-block" th:text="${#temporals.format(l.createdAt, 'dd/MM/yyyy')}">26/10/2026</strong>
+                            <small class="text-secondary" th:text="${#temporals.format(l.createdAt, 'HH:mm:ss')}">09:00:00</small>
+                        </td>
+                        <td>
+                            <span class="cb-chip">
+                                <i class="bi"
+                                   th:classappend="${l.action == 'APPOINTMENT_BOOKED'} ? 'bi-calendar-plus' : (${l.action == 'APPOINTMENT_CANCELLED'} ? 'bi-x-circle' : (${l.action == 'APPOINTMENT_STATUS_CHANGED'} ? 'bi-arrow-repeat' : 'bi-journal-text'))"></i>
+                                <span th:text="${@auditMessages.action(l.action)}">Action</span>
+                            </span>
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="cb-avatar"><i class="bi bi-person-fill"></i></span>
+                                <div class="min-w-0">
+                                    <strong class="small d-block" th:text="${l.username}">user</strong>
+                                    <small class="text-secondary d-md-none cb-log-text" th:text="${@auditMessages.describe(l)}">sentence</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="d-none d-md-table-cell small cb-log-text" th:text="${@auditMessages.describe(l)}">sentence</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-grid gap-2" th:unless="${result.logs.isEmpty()}">
+                <p class="small text-secondary text-center mb-0"
+                   th:text="#{adminOps.audit.showing(${result.page.from}, ${result.page.to}, ${result.page.total})}">Showing 1-10 of 25</p>
+                <div th:replace="~{fragments/layout :: pager(${result.page})}"></div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{nav.news})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <nav class="cb-crumbs mb-3" aria-label="breadcrumb">
+            <a th:href="@{/}"><i class="bi bi-house-door"></i> <span th:text="#{nav.home}">Home</span></a>
+            <i class="bi bi-chevron-right"></i>
+            <span class="fw-semibold text-body" th:text="#{nav.news}">News</span>
+        </nav>
+
+        <div class="mb-4" style="max-width: 46rem">
+            <span class="cb-eyebrow" th:text="#{news.eyebrow}">Medical knowledge</span>
+            <h1 class="cb-h1 mb-2" th:text="#{news.title}">Health news</h1>
+            <p class="text-secondary mb-0" th:text="#{news.subtitle}">subtitle</p>
+        </div>
+
+        <div class="cb-panel mb-4 d-grid gap-3">
+            <form th:action="@{/news}" method="get" class="d-flex flex-column flex-md-row gap-2">
+                <input type="hidden" name="category" th:if="${category != null}" th:value="${category}">
+                <div class="cb-field flex-grow-1">
+                    <i class="bi bi-search"></i>
+                    <input type="text" name="keyword" th:value="${keyword}" th:placeholder="#{news.search.placeholder}"
+                           th:aria-label="#{news.search.placeholder}">
+                </div>
+                <button type="submit" class="btn btn-primary"><i class="bi bi-arrow-right"></i> <span th:text="#{news.search.button}">Search</span></button>
+            </form>
+            <div class="cb-pillbar">
+                <a class="cb-pill" th:classappend="${category == null} ? 'active'" th:href="@{/news(keyword=${keyword})}"
+                   th:text="#{news.category.all}">All</a>
+                <a class="cb-pill" th:each="c : ${categories}" th:classappend="${category == c} ? 'active'"
+                   th:href="@{/news(category=${c}, keyword=${keyword})}">
+                    <i class="bi" th:classappend="${c.icon}"></i> <span th:text="#{|news.category.${c}|}">Topic</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="cb-panel text-center py-5" th:if="${articles.isEmpty()}">
+            <div class="cb-spec-icon mx-auto mb-3"><i class="bi bi-journal-x"></i></div>
+            <p class="fw-semibold mb-3" th:text="#{news.empty}">No articles</p>
+            <a class="btn btn-secondary" th:href="@{/news}"><i class="bi bi-x-circle"></i> <span th:text="#{doctors.clear}">Clear all</span></a>
+        </div>
+
+        <div class="row g-4 align-items-start" th:if="${!articles.isEmpty()}">
+            <div class="col-12 col-lg-8 d-grid gap-4">
+                <article class="cb-lead" th:with="a=${articles.get(0)}">
+                    <div class="cb-lead-media" th:classappend="'cb-cat-' + ${a.category}">
+                        <i class="bi" th:classappend="${a.category.icon}"></i>
+                        <span class="cb-chip bg-white"><i class="bi bi-star-fill"></i> <span th:text="#{news.lead}">Featured</span></span>
+                    </div>
+                    <div class="cb-lead-body">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-2 small text-secondary">
+                            <span class="cb-chip" th:text="#{|news.category.${a.category}|}">Topic</span>
+                            <span><i class="bi bi-clock"></i> <span th:text="#{news.readMinutes(${a.readMinutes})}">5 min</span></span>
+                            <span th:text="${#temporals.format(a.publishedAt, 'dd/MM/yyyy')}">01/01/2026</span>
+                        </div>
+                        <h2 class="cb-h2 fs-3 mb-2"><a th:href="@{/news/{id}(id=${a.id})}" th:text="${a.title}">Title</a></h2>
+                        <p class="text-secondary" th:text="${a.summary}">Summary</p>
+                        <a class="btn btn-primary align-self-start mt-auto" th:href="@{/news/{id}(id=${a.id})}">
+                            <span th:text="#{news.read}">Read</span> <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </article>
+
+                <div class="d-flex align-items-center justify-content-between" th:if="${articles.size() > 1}">
+                    <h2 class="h4 fw-bold m-0" th:text="#{news.latest}">Latest articles</h2>
+                    <span class="small text-secondary" th:text="#{news.found(${articles.size()})}">6 articles</span>
+                </div>
+                <article class="cb-article" th:each="a, st : ${articles}" th:if="${st.index > 0}">
+                    <div class="cb-article-icon" th:classappend="'cb-cat-' + ${a.category}"><i class="bi" th:classappend="${a.category.icon}"></i></div>
+                    <div class="flex-grow-1 min-w-0">
+                        <div class="d-flex flex-wrap align-items-center gap-2 mb-1 small text-secondary">
+                            <span class="cb-chip" th:text="#{|news.category.${a.category}|}">Topic</span>
+                            <span><i class="bi bi-clock"></i> <span th:text="#{news.readMinutes(${a.readMinutes})}">5 min</span></span>
+                            <span th:text="${#temporals.format(a.publishedAt, 'dd/MM/yyyy')}">01/01/2026</span>
+                        </div>
+                        <h3 class="cb-h2 mb-1"><a th:href="@{/news/{id}(id=${a.id})}" th:text="${a.title}">Title</a></h3>
+                        <p class="small text-secondary cb-clamp-2 mb-2" th:text="${a.summary}">Summary</p>
+                        <a class="cb-link small" th:href="@{/news/{id}(id=${a.id})}"><span th:text="#{news.read}">Read</span> <i class="bi bi-arrow-right"></i></a>
+                    </div>
+                </article>
+            </div>
+
+            <aside class="col-12 col-lg-4 d-grid gap-4">
+                <div th:replace="~{fragments/layout :: newsCta}"></div>
+                <div class="cb-panel">
+                    <h2 class="h6 fw-bold mb-3" th:text="#{news.topics}">Topics</h2>
+                    <div class="d-flex flex-wrap gap-2">
+                        <a class="cb-chip cb-chip-soft" th:each="c : ${categories}" th:href="@{/news(category=${c})}">
+                            <i class="bi" th:classappend="${c.icon}"></i> <span th:text="#{|news.category.${c}|}">Topic</span>
+                        </a>
+                    </div>
+                </div>
+                <div class="cb-note"><i class="bi bi-info-circle-fill"></i> <span th:text="#{news.disclaimer}">Disclaimer</span></div>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

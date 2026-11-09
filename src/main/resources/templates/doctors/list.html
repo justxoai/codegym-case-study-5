@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.doctors})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <nav class="cb-crumbs mb-3" aria-label="breadcrumb">
+            <a th:href="@{/}"><i class="bi bi-house-door"></i> <span th:text="#{nav.home}">Home</span></a>
+            <i class="bi bi-chevron-right"></i>
+            <span class="fw-semibold text-body" th:text="#{nav.doctors}">Doctors</span>
+        </nav>
+
+        <div class="mb-4">
+            <span class="cb-eyebrow" th:text="#{doctors.eyebrow}">Directory</span>
+            <h1 class="cb-h1 mb-1" th:text="#{doctors.title}">Our doctors</h1>
+            <p class="text-secondary mb-0" th:text="#{doctors.subtitle}">Pick a doctor and book a free time slot.</p>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <aside class="col-12 col-lg-4 col-xl-3">
+                <form id="doctorFilter" th:action="@{/doctors}" method="get" data-autosubmit
+                      class="cb-panel cb-sticky d-grid gap-4">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <span class="fw-semibold"><i class="bi bi-sliders text-primary"></i> <span th:text="#{doctors.filters}">Filters</span></span>
+                        <a class="cb-link small" th:href="@{/doctors}" th:text="#{doctors.clear}">Clear all</a>
+                    </div>
+
+                    <div>
+                        <label class="cb-label" for="keyword"><i class="bi bi-search"></i> <span th:text="#{doctors.search.label}">Doctor name</span></label>
+                        <div class="cb-field">
+                            <input type="text" id="keyword" name="keyword" th:value="${keyword}"
+                                   th:placeholder="#{doctors.search.placeholder}">
+                        </div>
+                    </div>
+
+                    <div>
+                        <span class="cb-label"><i class="bi bi-clipboard2-pulse"></i> <span th:text="#{doctors.specialty}">Specialty</span></span>
+                        <div class="d-grid gap-1">
+                            <label class="cb-option">
+                                <span class="d-flex align-items-center gap-2">
+                                    <input type="radio" class="form-check-input m-0" name="specialtyId" value=""
+                                           th:checked="${specialtyId == null}">
+                                    <span th:text="#{doctors.allSpecialties}">All specialties</span>
+                                </span>
+                            </label>
+                            <label class="cb-option" th:each="s : ${specialties}">
+                                <span class="d-flex align-items-center gap-2">
+                                    <input type="radio" class="form-check-input m-0" name="specialtyId" th:value="${s.id}"
+                                           th:checked="${specialtyId != null and specialtyId == s.id}">
+                                    <span th:text="${s.localizedName}">Specialty</span>
+                                </span>
+                                <span class="cb-chip cb-chip-soft" th:text="${specialtyCounts.get(s.id) ?: 0}">3</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-funnel"></i> <span th:text="#{doctors.filter}">Filter</span>
+                        </button>
+                    </div>
+                </form>
+            </aside>
+
+            <section class="col-12 col-lg-8 col-xl-9 d-grid gap-3">
+                <div class="cb-panel d-flex flex-column flex-sm-row align-items-sm-center justify-content-between gap-2 py-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="cb-dot"></span>
+                        <span class="fw-semibold" th:text="#{doctors.found(${doctors.size()})}">3 doctors found</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <label class="small fw-semibold text-secondary text-nowrap m-0" for="sort" th:text="#{doctors.sort}">Sort by</label>
+                        <select id="sort" name="sort" form="doctorFilter" data-autosubmit-field class="cb-select">
+                            <option value="name" th:selected="${sort == 'name'}" th:text="#{doctors.sort.name}">Name</option>
+                            <option value="experience" th:selected="${sort == 'experience'}" th:text="#{doctors.sort.experience}">Experience</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="cb-panel text-center py-5" th:if="${doctors.isEmpty()}">
+                    <div class="cb-spec-icon mx-auto mb-3"><i class="bi bi-search"></i></div>
+                    <p class="fw-semibold mb-1" th:text="#{doctors.empty}">No doctors</p>
+                    <p class="small text-secondary" th:text="#{doctors.emptyHint}">Try another name or clear the filters.</p>
+                    <a class="btn btn-secondary" th:href="@{/doctors}"><i class="bi bi-x-circle"></i> <span th:text="#{doctors.clear}">Clear all</span></a>
+                </div>
+
+                <article class="cb-listing" th:each="d : ${doctors}">
+                    <div class="cb-listing-photo">
+                        <div class="cb-listing-avatar"><i class="bi bi-person-badge"></i></div>
+                        <span class="cb-chip" th:if="${freeSlotCounts.get(d.id) > 0}">
+                            <span class="cb-dot"></span> <span th:text="#{doctors.freeCount(${freeSlotCounts.get(d.id)})}">5 free</span>
+                        </span>
+                    </div>
+
+                    <div class="flex-grow-1 d-flex flex-column justify-content-between gap-3 min-w-0">
+                        <div>
+                            <h2 class="cb-h2 mb-0"><a th:href="@{/doctors/{id}(id=${d.id})}" th:text="${d.displayName}">Doctor</a></h2>
+                            <div class="fw-semibold text-primary" th:text="${d.specialty.localizedName}">Specialty</div>
+                            <div class="d-flex flex-wrap gap-3 small text-secondary mt-2">
+                                <span><i class="bi bi-award"></i> <span th:text="#{doctor.experience(${d.yearsExperience})}">10 years</span></span>
+                                <span><i class="bi bi-person-circle"></i> <span th:text="${d.user.username}">doctor1</span></span>
+                            </div>
+                            <p class="small text-secondary mt-2 mb-0 cb-clamp-2" th:if="${d.bio != null and !d.bio.isBlank()}" th:text="${d.bio}">Bio</p>
+                        </div>
+
+                        <div class="cb-slotbox">
+                            <div class="small fw-semibold mb-2"><i class="bi bi-clock text-primary"></i> <span th:text="#{doctors.nextSlots}">Next available</span></div>
+                            <div class="d-flex flex-wrap align-items-center gap-2" th:if="${!nextSlots.get(d.id).isEmpty()}">
+                                <a class="cb-slot" th:each="s : ${nextSlots.get(d.id)}" th:href="@{/doctors/{id}(id=${d.id})}">
+                                    <span th:text="${#temporals.format(s.slotDate, 'dd/MM')}">01/01</span>
+                                    <strong th:text="${#temporals.format(s.startTime, 'HH:mm')}">09:00</strong>
+                                </a>
+                                <a class="small cb-link" th:if="${freeSlotCounts.get(d.id) > 3}" th:href="@{/doctors/{id}(id=${d.id})}"
+                                   th:text="#{doctors.moreTimes(${freeSlotCounts.get(d.id) - 3})}">+2 more</a>
+                            </div>
+                            <div class="small text-secondary" th:if="${nextSlots.get(d.id).isEmpty()}" th:text="#{doctor.noSlots}">No slots</div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <a class="btn btn-primary" th:href="@{/doctors/{id}(id=${d.id})}">
+                                <span th:text="#{doctor.viewSlots}">View slots</span> <i class="bi bi-arrow-right"></i>
+                            </a>
+                        </div>
+                    </div>
+                </article>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

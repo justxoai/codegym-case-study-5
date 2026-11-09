@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.booking})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4">
+        <nav class="cb-crumbs mb-3" aria-label="breadcrumb">
+            <a th:href="@{/doctors}"><i class="bi bi-arrow-left"></i> <span th:text="#{nav.doctors}">Doctors</span></a>
+            <i class="bi bi-chevron-right"></i>
+            <span class="fw-semibold text-body" th:text="#{nav.book}">Book appointment</span>
+        </nav>
+
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <div th:replace="~{fragments/layout :: bookingSteps(${doctor != null ? 2 : 1})}"></div>
+
+        <div class="row g-4 align-items-start mt-1">
+            <div class="col-12 col-lg-7 d-grid gap-3">
+
+                <div class="cb-panel p-4">
+                    <form th:action="@{/booking}" method="get" data-autosubmit class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <label class="cb-label" for="specialtyId"><i class="bi bi-heart-pulse text-primary"></i> <span th:text="#{booking.chooseSpecialty}">Choose a specialty</span></label>
+                            <select class="form-select cb-select" id="specialtyId" name="specialtyId">
+                                <option value="" th:text="#{booking.chooseSpecialty.placeholder}">-- Choose a specialty --</option>
+                                <option th:each="sp : ${specialties}" th:value="${sp.id}" th:selected="${sp.id == specialtyId}"
+                                        th:text="${sp.localizedName}">Specialty</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="cb-label" for="doctorId"><i class="bi bi-person-badge text-primary"></i> <span th:text="#{booking.chooseDoctor}">Choose a doctor</span></label>
+                            <select class="form-select cb-select" id="doctorId" name="doctorId" th:disabled="${specialtyId == null or doctors.isEmpty()}">
+                                <option value="" th:text="${specialtyId == null} ? #{booking.chooseDoctor.first} : (${doctors.isEmpty()} ? #{booking.noDoctors} : #{booking.chooseDoctor.placeholder})">-- Choose a doctor --</option>
+                                <option th:each="d : ${doctors}" th:value="${d.id}" th:selected="${d.id == doctorId}"
+                                        th:text="${d.displayName}">Doctor</option>
+                            </select>
+                        </div>
+                        <noscript><div class="col-12"><button class="btn btn-secondary btn-sm" type="submit" th:text="#{booking.chooseDoctor}">Choose</button></div></noscript>
+                    </form>
+
+                    <div class="cb-visit-doctor mt-3" th:if="${doctor != null}">
+                        <span class="cb-avatar cb-avatar-lg"><i class="bi bi-person-badge"></i></span>
+                        <div class="min-w-0 flex-grow-1">
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <h2 class="h5 fw-semibold m-0" th:text="${doctor.displayName}">Doctor</h2>
+                                <span class="cb-chip cb-chip-soft" th:text="${doctor.specialty.localizedName}">Specialty</span>
+                            </div>
+                            <p class="small text-secondary mb-0 mt-1"><i class="bi bi-award"></i>
+                                <span th:text="#{doctor.experience(${doctor.yearsExperience})}">10 years</span></p>
+                        </div>
+                        <a class="btn btn-secondary btn-sm flex-shrink-0" th:href="@{/doctors/{id}(id=${doctor.id})}" th:text="#{booking.viewProfile}">Profile</a>
+                    </div>
+                </div>
+
+                <div class="cb-panel text-center py-5" th:if="${doctor == null}">
+                    <span class="cb-avatar cb-avatar-lg mx-auto mb-3"><i class="bi bi-calendar2-plus"></i></span>
+                    <p class="text-secondary mb-0" th:text="#{booking.chooseDoctor.hint}">Choose a doctor to see free times.</p>
+                </div>
+
+                <div class="cb-panel text-center py-5" th:if="${doctor != null and dates.isEmpty()}">
+                    <span class="cb-avatar cb-avatar-lg mx-auto mb-3"><i class="bi bi-calendar2-x"></i></span>
+                    <p class="text-secondary mb-3" th:text="#{booking.noSlots}">No free slots.</p>
+                    <a class="btn btn-secondary btn-sm" th:href="@{/doctors}" th:text="#{booking.back}">Back to doctors</a>
+                </div>
+
+                <form id="bookingForm" th:if="${doctor != null and !dates.isEmpty()}" th:action="@{/booking/select}" method="post"
+                      class="cb-panel p-4 d-grid gap-4">
+
+                    <fieldset>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <legend class="cb-label m-0 float-none w-auto"><i class="bi bi-clipboard2-pulse text-primary"></i> <span th:text="#{booking.reason.title}">Reason</span></legend>
+                            <span class="small text-secondary" th:text="#{booking.reason.required}">Required</span>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-12 col-sm-6" th:each="r, st : ${reasons}">
+                                <label class="cb-reason">
+                                    <input type="radio" class="form-check-input m-0 flex-shrink-0" name="reasonKey" th:value="${r}" th:checked="${st.first}"
+                                           data-mirror="#sumReason" th:attr="data-label=#{|booking.reason.${r}|}">
+                                    <span class="min-w-0">
+                                        <strong class="d-block small" th:text="#{|booking.reason.${r}|}">Reason</strong>
+                                        <span class="small text-secondary" th:text="#{|booking.reason.${r}.desc|}">Description</span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <div>
+                        <div class="d-flex justify-content-between align-items-end mb-2">
+                            <div>
+                                <div class="cb-label m-0"><i class="bi bi-calendar3 text-primary"></i> <span th:text="#{booking.date.title}">Choose a day</span></div>
+                                <div class="small text-secondary" th:if="${selectedDate != null}"
+                                     th:text="#{booking.month(${#temporals.format(selectedDate, 'MM/yyyy')})}">Month</div>
+                            </div>
+                        </div>
+                        <div class="cb-dates">
+                            <a class="cb-date" th:each="entry : ${dates}"
+                               th:classappend="${entry.key == selectedDate} ? 'is-selected'"
+                               th:href="@{/booking(doctorId=${doctor.id}, date=${entry.key})}">
+                                <small th:text="${#temporals.dayOfWeekNameShort(entry.key)}">Thu</small>
+                                <strong th:text="${#temporals.day(entry.key)}">23</strong>
+                                <small th:text="#{booking.slots(${entry.value})}">8 slots</small>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="cb-label mb-2"><i class="bi bi-clock text-primary"></i> <span th:text="#{booking.time.title}">Choose a time</span>
+                            <span class="fw-normal text-secondary" th:if="${selectedDate != null}"
+                                  th:text="'· ' + ${#temporals.dayOfWeekName(selectedDate)} + ', ' + ${#temporals.format(selectedDate, 'dd/MM/yyyy')}">· Thursday</span></div>
+                        <div class="mb-3" th:each="p : ${periods}">
+                            <div class="small text-secondary text-uppercase fw-semibold mb-2" th:text="#{|booking.period.${p.key}|}">Morning</div>
+                            <div class="cb-slotpicks">
+                                <label class="cb-slotpick" th:each="s : ${p.value}">
+                                    <input type="radio" name="slotId" th:value="${s.id}" required
+                                           th:checked="${selectedSlot != null and selectedSlot.id == s.id}"
+                                           data-mirror="#sumTime" data-enables="[data-needs-slot]"
+                                           th:attr="data-label=${#temporals.dayOfWeekName(s.slotDate)} + ', ' + ${#temporals.format(s.slotDate, 'dd/MM/yyyy')} + ' · ' + ${#temporals.format(s.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(s.endTime, 'HH:mm')}">
+                                    <span th:text="${#temporals.format(s.startTime, 'HH:mm')}">09:00</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="cb-label d-flex justify-content-between" for="note">
+                            <span><i class="bi bi-pencil-square text-primary"></i> <span th:text="#{booking.note.title}">Note</span></span>
+                            <span class="small text-secondary fw-normal" th:text="#{booking.note.max}">Max 300</span>
+                        </label>
+                        <textarea class="form-control cb-textarea" id="note" name="note" rows="3" maxlength="300"
+                                  th:placeholder="#{booking.reason.placeholder}"></textarea>
+                    </div>
+
+                    <div class="d-flex flex-column-reverse flex-sm-row justify-content-between gap-2">
+                        <a class="btn btn-secondary" th:href="@{/doctors}"><i class="bi bi-arrow-left"></i> <span th:text="#{booking.back}">Back</span></a>
+                        <button type="submit" class="btn btn-success" data-needs-slot th:disabled="${selectedSlot == null}">
+                            <span th:text="#{booking.continue}">Continue</span> <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <aside class="col-12 col-lg-5">
+                <div class="cb-panel p-4 cb-sticky d-grid gap-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar2-check text-primary fs-5"></i>
+                        <h2 class="cb-h2 fs-6 m-0" th:text="#{booking.summary}">Appointment summary</h2>
+                    </div>
+
+                    <div class="cb-kv-block">
+                        <small class="text-secondary" th:text="#{booking.doctor}">Doctor</small>
+                        <strong th:if="${doctor != null}" th:text="${doctor.displayName}">Doctor</strong>
+                        <strong th:if="${doctor == null}" class="text-secondary fw-normal" th:text="#{booking.chooseDoctor.placeholder}">-</strong>
+                        <small class="text-primary" th:if="${doctor != null}" th:text="${doctor.specialty.localizedName}">Specialty</small>
+                    </div>
+                    <div class="cb-kv-block">
+                        <small class="text-secondary" th:text="#{booking.summary.when}">Date and time</small>
+                        <strong id="sumTime" th:classappend="${selectedSlot == null} ? 'text-secondary fw-normal'"
+                                th:text="${selectedSlot != null} ? (${#temporals.dayOfWeekName(selectedSlot.slotDate)} + ', ' + ${#temporals.format(selectedSlot.slotDate, 'dd/MM/yyyy')} + ' · ' + ${#temporals.format(selectedSlot.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(selectedSlot.endTime, 'HH:mm')}) : #{booking.summary.noSlot}">Pick a time</strong>
+                    </div>
+                    <div class="cb-kv-block">
+                        <small class="text-secondary" th:text="#{booking.summary.reason}">Reason</small>
+                        <strong id="sumReason" th:text="#{booking.reason.checkup}">Check-up</strong>
+                    </div>
+
+                    <div class="cb-note"><i class="bi bi-info-circle"></i>
+                        <span><strong th:text="#{booking.summary.pendingTitle}">Needs confirmation:</strong> <span th:text="#{booking.summary.pending}">pending</span></span></div>
+
+                    <button type="submit" form="bookingForm" class="btn btn-success w-100" data-needs-slot
+                            th:disabled="${selectedSlot == null}" th:if="${doctor != null and !dates.isEmpty()}">
+                        <span th:text="#{booking.continue}">Continue</span> <i class="bi bi-arrow-right"></i>
+                    </button>
+                    <p class="small text-secondary text-center mb-0"><i class="bi bi-x-circle"></i> <span th:text="#{booking.summary.cancelNote}">You can cancel later.</span></p>
+                </div>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

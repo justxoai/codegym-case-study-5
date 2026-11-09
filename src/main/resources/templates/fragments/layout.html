@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' | ClinicBook'">ClinicBook</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<body>
+
+<header th:fragment="navbar" class="cb-topbar">
+    <nav class="navbar navbar-expand-xl p-0">
+        <div class="container">
+            <a class="cb-brand" th:href="@{/}">
+                <span class="cb-brand-mark"><i class="bi bi-heart-pulse"></i></span> ClinicBook
+            </a>
+            <button class="navbar-toggler border-0 shadow-none" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"
+                    aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="bi bi-list fs-2"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                <ul class="cb-navpills navbar-nav mx-xl-auto my-3 my-xl-0">
+                    <li class="nav-item"><a class="nav-link" data-nav="/" th:href="@{/}" th:text="#{nav.home}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" data-nav="/doctors" th:href="@{/doctors}" th:text="#{nav.doctors}">Doctors</a></li>
+                    <li class="nav-item"><a class="nav-link" data-nav="/news" th:href="@{/news}" th:text="#{nav.news}">News</a></li>
+
+                    <li class="nav-item" sec:authorize="hasRole('PATIENT')">
+                        <a class="nav-link" data-nav="/booking" th:href="@{/booking}" th:text="#{nav.book}">Book appointment</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('PATIENT')">
+                        <a class="nav-link" data-nav="/patient/dashboard" th:href="@{/patient/dashboard}" th:text="#{nav.patientHome}">My dashboard</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('PATIENT')">
+                        <a class="nav-link" data-nav="/patient/appointments" th:href="@{/patient/appointments}" th:text="#{nav.myAppointments}">My appointments</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('DOCTOR')">
+                        <a class="nav-link" data-nav="/doctor/dashboard" th:href="@{/doctor/dashboard}" th:text="#{nav.doctorHome}">Work console</a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('DOCTOR')">
+                        <a class="nav-link" data-nav="/doctor/schedule" th:href="@{/doctor/schedule}" th:text="#{nav.mySchedule}">My schedule</a>
+                    </li>
+                    <li class="nav-item dropdown" sec:authorize="hasRole('ADMIN')">
+                        <a class="nav-link dropdown-toggle" data-nav="/admin" href="#" role="button" data-bs-toggle="dropdown"
+                           aria-expanded="false" th:text="#{nav.admin}">Admin</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" th:href="@{/admin}" th:text="#{nav.dashboard}">Dashboard</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/specialties}" th:text="#{nav.specialties}">Specialties</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/doctors}" th:text="#{nav.manageDoctors}">Doctors</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/appointments}" th:text="#{nav.appointments}">Appointments</a></li>
+                            <li><a class="dropdown-item" th:href="@{/admin/audit}" th:text="#{nav.audit}">Audit log</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+                <div class="d-flex flex-wrap align-items-center gap-2 pb-3 pb-xl-0">
+                    <div class="cb-lang" role="group" aria-label="Language">
+                        <a data-lang="vi" href="?lang=vi">VI</a>
+                        <a data-lang="en" href="?lang=en">EN</a>
+                    </div>
+
+                    <div sec:authorize="isAnonymous()" class="d-flex gap-2">
+                        <a class="btn btn-outline-primary btn-sm" th:href="@{/login}" th:text="#{nav.login}">Login</a>
+                        <a class="btn btn-primary btn-sm" th:href="@{/register}" th:text="#{nav.register}">Register</a>
+                    </div>
+                    <div sec:authorize="isAuthenticated()" class="dropdown">
+                        <button type="button" class="cb-user border-0" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-person-fill"></i> <span sec:authentication="name">user</span>
+                            <i class="bi bi-chevron-down cb-user-caret"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" data-nav="/account" th:href="@{/account/password}">
+                                <i class="bi bi-shield-lock me-2"></i><span th:text="#{nav.changePassword}">Change password</span></a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="m-0">
+                                    <button type="submit" class="dropdown-item">
+                                        <i class="bi bi-box-arrow-right me-2"></i><span th:text="#{nav.logout}">Logout</span></button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</header>
+
+<section th:fragment="bookingSteps(active)" class="cb-bsteps-card">
+    <div class="cb-bsteps">
+        <div class="cb-bstep" th:each="n : ${#numbers.sequence(1, 3)}"
+             th:classappend="${n lt active} ? 'is-done' : (${n == active} ? 'is-active')">
+            <span class="cb-bstep-dot"><i class="bi bi-check-lg" th:if="${n lt active}"></i><span th:unless="${n lt active}" th:text="${n}">1</span></span>
+            <div class="min-w-0">
+                <small th:text="#{|booking.step.${n}.label|}">Step</small>
+                <strong class="d-block text-truncate" th:text="#{|booking.step${n}|}">Title</strong>
+            </div>
+        </div>
+    </div>
+    <div class="cb-bsteps-track"><div th:style="'width:' + ${active * 100 / 3} + '%'"></div></div>
+</section>
+
+<section th:fragment="adminHub(active, doctorCount, specialtyCount)" class="cb-dash-hero">
+    <div class="d-flex flex-column flex-lg-row align-items-lg-end justify-content-between gap-4 position-relative">
+        <div class="min-w-0" style="max-width: 46rem">
+            <span class="cb-chip bg-white mb-3"><i class="bi bi-diagram-3"></i> <span th:text="#{adminHub.crumb}">Staff and specialties</span></span>
+            <h1 class="cb-h1 mb-2" th:text="#{adminHub.title}">Doctor and specialty management</h1>
+            <p class="text-secondary mb-0" th:text="#{adminHub.subtitle}">Add, edit and remove doctors and specialties.</p>
+        </div>
+        <div class="flex-shrink-0 d-flex flex-wrap align-items-center gap-2">
+            <a class="btn btn-success" th:href="@{/admin/doctors/new}"><i class="bi bi-person-plus"></i> <span th:text="#{adminHub.addDoctor}">Add doctor</span></a>
+            <a class="btn btn-secondary" th:href="@{/admin/specialties}"><i class="bi bi-plus-circle"></i> <span th:text="#{adminHub.addSpecialty}">Add specialty</span></a>
+        </div>
+    </div>
+    <div class="cb-pillbar mt-4 position-relative">
+        <a class="cb-pill" th:classappend="${active == 'doctors'} ? 'active'" th:href="@{/admin/doctors}">
+            <i class="bi bi-person-badge"></i> <span th:text="#{adminHub.tab.doctors}">Doctors</span>
+            <span class="cb-tab-count" th:text="${doctorCount}">0</span>
+        </a>
+        <a class="cb-pill" th:classappend="${active == 'specialties'} ? 'active'" th:href="@{/admin/specialties}">
+            <i class="bi bi-heart-pulse"></i> <span th:text="#{adminHub.tab.specialties}">Specialties</span>
+            <span class="cb-tab-count" th:text="${specialtyCount}">0</span>
+        </a>
+    </div>
+</section>
+
+<section th:fragment="adminOps(active, appointmentCount, auditCount)" class="cb-dash-hero">
+    <div class="min-w-0 position-relative" style="max-width: 46rem">
+        <span class="cb-chip bg-white mb-3"><i class="bi bi-clipboard2-pulse"></i> <span th:text="#{adminOps.crumb}">Operations</span></span>
+        <h1 class="cb-h1 mb-2" th:text="#{adminOps.title}">Appointments and audit trail</h1>
+        <p class="text-secondary mb-0" th:text="#{adminOps.subtitle}">Follow every appointment and check what was done.</p>
+    </div>
+    <div class="cb-pillbar mt-4 position-relative">
+        <a class="cb-pill" th:classappend="${active == 'appointments'} ? 'active'" th:href="@{/admin/appointments}">
+            <i class="bi bi-calendar2-week"></i> <span th:text="#{adminOps.tab.appointments}">Appointments</span>
+            <span class="cb-tab-count" th:text="${appointmentCount}">0</span>
+        </a>
+        <a class="cb-pill" th:classappend="${active == 'audit'} ? 'active'" th:href="@{/admin/audit}">
+            <i class="bi bi-journal-text"></i> <span th:text="#{adminOps.tab.audit}">Audit log</span>
+            <span class="cb-tab-count" th:text="${auditCount}">0</span>
+        </a>
+    </div>
+</section>
+
+<div th:fragment="alerts">
+    <div class="alert alert-success alert-dismissible fade show cb-autoclose" role="alert" th:if="${successKey}">
+        <span th:text="#{${successKey}}">Done</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert" th:if="${errorKey}">
+        <span th:text="#{${errorKey}}">Error</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+</div>
+
+<div th:fragment="loadBar(booked, total, percent)" class="cb-loadbar">
+    <small class="text-secondary" th:if="${total == 0}" th:text="#{load.none}">No slots yet</small>
+    <th:block th:if="${total gt 0}">
+        <div class="cb-loadbar-track" role="img" th:classappend="${percent ge 85} ? 'is-peak'"
+             th:title="#{load.summary(${booked}, ${total - booked}, ${percent})}"
+             th:attr="aria-label=#{load.summary(${booked}, ${total - booked}, ${percent})}">
+            <i th:style="'width:' + ${percent} + '%'"></i>
+        </div>
+        <div class="cb-loadbar-legend">
+            <span><i class="cb-swatch is-booked" th:classappend="${percent ge 85} ? 'is-peak'"></i> <b th:text="${booked}">3</b> <span th:text="#{load.booked}">Booked</span></span>
+            <span><i class="cb-swatch is-free"></i> <b th:text="${total - booked}">5</b> <span th:text="#{load.free}">Free</span></span>
+            <strong class="ms-auto" th:text="${percent} + '%'">38%</strong>
+        </div>
+    </th:block>
+</div>
+
+<nav th:fragment="pager(pv)" th:if="${pv.totalPages gt 1}" class="cb-pager" th:attr="aria-label=#{pager.label}">
+    <ul class="pagination pagination-sm justify-content-center flex-wrap mb-0">
+        <li class="page-item" th:classappend="${pv.first} ? 'disabled'">
+            <a class="page-link" data-keep-scroll th:href="@{${pv.url(pv.first ? 1 : pv.page - 1)}}"
+               th:title="#{pager.prev}" th:attr="aria-label=#{pager.prev}"><i class="bi bi-chevron-left"></i></a>
+        </li>
+        <li class="page-item" th:each="p : ${pv.pages}" th:classappend="${p == 0} ? 'disabled' : (${p == pv.page} ? 'active')">
+            <span class="page-link" th:if="${p == 0}">&hellip;</span>
+            <a class="page-link" th:unless="${p == 0}" data-keep-scroll th:href="@{${pv.url(p)}}" th:text="${p}">1</a>
+        </li>
+        <li class="page-item" th:classappend="${pv.last} ? 'disabled'">
+            <a class="page-link" data-keep-scroll th:href="@{${pv.url(pv.last ? pv.page : pv.page + 1)}}"
+               th:title="#{pager.next}" th:attr="aria-label=#{pager.next}"><i class="bi bi-chevron-right"></i></a>
+        </li>
+    </ul>
+</nav>
+
+<span th:fragment="statusBadge(status)" class="badge"
+      th:classappend="${status.name() == 'CONFIRMED'} ? 'bg-primary' : (${status.name() == 'COMPLETED'} ? 'bg-success' : (${status.name() == 'CANCELLED'} ? 'bg-secondary' : 'bg-warning text-dark'))"
+      th:text="#{|status.${status}|}">PENDING</span>
+
+<aside th:fragment="authBrand(title, text)" class="cb-auth-brand">
+    <div class="d-grid gap-4 position-relative">
+        <span class="cb-chip bg-white align-self-start"><i class="bi bi-flower1"></i> <span th:text="#{auth.tag}">Calm care</span></span>
+        <div>
+            <h1 class="cb-h1 mb-2" th:text="${title}">Title</h1>
+            <p class="text-secondary mb-0" th:text="${text}">Text</p>
+        </div>
+        <div class="cb-auth-art"><i class="bi bi-heart-pulse"></i></div>
+        <div class="d-grid gap-2">
+            <div class="cb-auth-point">
+                <span class="cb-trust-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                <div class="lh-sm"><div class="fw-semibold small" th:text="#{home.trust1.title}">t</div>
+                    <div class="small text-secondary" th:text="#{home.trust1.text}">t</div></div>
+            </div>
+            <div class="cb-auth-point">
+                <span class="cb-trust-icon"><i class="bi bi-calendar2-check"></i></span>
+                <div class="lh-sm"><div class="fw-semibold small" th:text="#{home.trust2.title}">t</div>
+                    <div class="small text-secondary" th:text="#{home.trust2.text}">t</div></div>
+            </div>
+            <div class="cb-auth-point">
+                <span class="cb-trust-icon"><i class="bi bi-shield-lock-fill"></i></span>
+                <div class="lh-sm"><div class="fw-semibold small" th:text="#{home.trust3.title}">t</div>
+                    <div class="small text-secondary" th:text="#{home.trust3.text}">t</div></div>
+            </div>
+        </div>
+    </div>
+</aside>
+
+<div th:fragment="newsCta" class="cb-cta-card">
+    <div class="cb-spec-icon mb-3"><i class="bi bi-stethoscope"></i></div>
+    <h2 class="h5 fw-bold" th:text="#{news.cta.title}">Need advice?</h2>
+    <p class="small text-secondary" th:text="#{news.cta.text}">text</p>
+    <a class="btn btn-primary w-100" th:href="@{/doctors}"><i class="bi bi-calendar2-plus"></i> <span th:text="#{news.cta.button}">Find a doctor</span></a>
+</div>
+
+<footer th:fragment="footer" class="cb-footer">
+    <div class="container">
+        <div class="row g-4 mb-4">
+            <div class="col-lg-5">
+                <a class="cb-brand mb-3" th:href="@{/}">
+                    <span class="cb-brand-mark"><i class="bi bi-heart-pulse"></i></span> ClinicBook
+                </a>
+                <p class="small mb-0 mt-2" th:text="#{footer.tagline}">Calm, effortless healthcare booking.</p>
+            </div>
+            <div class="col-6 col-lg-3 offset-lg-1">
+                <h6 class="fw-bold mb-3" th:text="#{footer.explore}">Explore</h6>
+                <ul class="list-unstyled small d-grid gap-2 mb-0">
+                    <li><a th:href="@{/}" th:text="#{nav.home}">Home</a></li>
+                    <li><a th:href="@{/doctors}" th:text="#{nav.doctors}">Doctors</a></li>
+                    <li><a th:href="@{/news}" th:text="#{nav.news}">News</a></li>
+                    <li sec:authorize="isAnonymous()"><a th:href="@{/register}" th:text="#{nav.register}">Register</a></li>
+                    <li sec:authorize="hasRole('PATIENT')"><a th:href="@{/patient/appointments}" th:text="#{nav.myAppointments}">My appointments</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-lg-3">
+                <h6 class="fw-bold mb-3" th:text="#{footer.language}">Language</h6>
+                <div class="d-flex flex-wrap gap-2">
+                    <a class="cb-chip cb-chip-soft" href="?lang=vi">Tiếng Việt</a>
+                    <a class="cb-chip cb-chip-soft" href="?lang=en">English</a>
+                    <button type="button" class="cb-chip cb-chip-soft border-0" data-cookie-settings>
+                        <i class="bi bi-shield-check"></i> <span th:text="#{cookie.settings}">Cookie settings</span></button>
+                </div>
+            </div>
+        </div>
+        <div class="border-top pt-3 small text-center" th:text="#{footer.text}">ClinicBook - CodeGym case study</div>
+    </div>
+    <div class="modal fade" id="cbConfirm" tabindex="-1" aria-labelledby="cbConfirmTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content cb-modal">
+                <div class="modal-body text-center p-4 pb-2">
+                    <span class="cb-modal-icon"><i class="bi bi-exclamation-triangle"></i></span>
+                    <h2 class="h5 fw-bold" id="cbConfirmTitle" th:text="#{confirm.title}">Please confirm</h2>
+                    <p class="text-secondary mb-0" id="cbConfirmText"></p>
+                </div>
+                <div class="modal-footer border-0 justify-content-center gap-2 pb-4">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" th:text="#{confirm.no}">Go back</button>
+                    <button type="button" class="btn btn-danger" id="cbConfirmYes" th:attr="data-default=#{confirm.yes}" th:text="#{confirm.yes}">Yes, continue</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <aside id="cbCookie" class="cb-cookie" hidden role="dialog" aria-live="polite" th:attr="aria-label=#{cookie.title}">
+        <div class="d-flex gap-3 align-items-start">
+            <span class="cb-modal-icon cb-modal-icon-sm flex-shrink-0"><i class="bi bi-shield-check"></i></span>
+            <div class="min-w-0">
+                <strong class="d-block" th:text="#{cookie.title}">ClinicBook uses cookies</strong>
+                <p class="small text-secondary mb-3" th:text="#{cookie.text}">Text</p>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-success btn-sm" data-consent="all" th:text="#{cookie.accept}">Accept all</button>
+                    <button type="button" class="btn btn-secondary btn-sm" data-consent="essential" th:text="#{cookie.essential}">Essential only</button>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:src="@{/js/app.js}"></script>
+</footer>
+
+</body>
+</html>

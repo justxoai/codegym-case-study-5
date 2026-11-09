@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.myAppointments})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-4">
+    <div th:replace="~{fragments/layout :: alerts}"></div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 m-0" th:text="#{patient.appointments.title}">My appointments</h1>
+        <a class="btn btn-primary btn-sm" th:href="@{/doctors}" th:text="#{patient.appointments.new}">Book new</a>
+    </div>
+
+    <div class="alert alert-info" th:if="${appointments.isEmpty()}" th:text="#{patient.appointments.empty}">None yet</div>
+
+    <div class="table-responsive" th:if="${!appointments.isEmpty()}">
+        <table class="table table-hover align-middle bg-white shadow-sm">
+            <thead class="table-light">
+            <tr>
+                <th>#</th>
+                <th th:text="#{booking.doctor}">Doctor</th>
+                <th th:text="#{booking.date}">Date</th>
+                <th th:text="#{booking.time}">Time</th>
+                <th th:text="#{booking.reason}">Reason</th>
+                <th th:text="#{common.status}">Status</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="a : ${appointments}">
+                <td th:text="${a.id}">1</td>
+                <td>
+                    <div th:text="${a.doctor.displayName}">Doctor</div>
+                    <div class="small text-muted" th:text="${a.doctor.specialty.localizedName}">Spec</div>
+                </td>
+                <td th:text="${#temporals.format(a.slot.slotDate, 'dd/MM/yyyy')}">01/01/2026</td>
+                <td th:text="${#temporals.format(a.slot.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(a.slot.endTime, 'HH:mm')}">09:00</td>
+                <td th:text="${a.reason}">Reason</td>
+                <td><span th:replace="~{fragments/layout :: statusBadge(${a.status})}"></span></td>
+                <td class="text-end">
+                    <form th:if="${a.status.name() == 'PENDING' or a.status.name() == 'CONFIRMED'}"
+                          th:action="@{/patient/appointments/{id}/cancel(id=${a.id})}" method="post" class="m-0">
+                        <button class="icon-btn icon-btn-sm icon-btn-danger" type="submit" th:title="#{common.cancel}" th:attr="aria-label=#{common.cancel}"><i class="bi bi-x-lg"></i></button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

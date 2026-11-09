@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.error})}"></head>
+<body>
+<nav th:replace="~{fragments/layout :: navbar}"></nav>
+
+<main class="container py-5 text-center">
+    <div class="display-1 text-primary fw-bold" th:text="${status}">500</div>
+    <h1 class="h4" th:text="#{error.page.title}">Something went wrong</h1>
+    <p class="text-muted" th:if="${status == 403}" th:text="#{error.page.forbidden}">Forbidden</p>
+    <p class="text-muted" th:if="${status == 404}" th:text="#{error.page.notFound}">Not found</p>
+    <a class="btn btn-primary mt-3" th:href="@{/}" th:text="#{error.page.home}">Home</a>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

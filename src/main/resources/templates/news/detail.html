@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(${article.title})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4">
+        <nav class="cb-crumbs mb-3" aria-label="breadcrumb">
+            <a th:href="@{/}"><i class="bi bi-house-door"></i> <span th:text="#{nav.home}">Home</span></a>
+            <i class="bi bi-chevron-right"></i>
+            <a th:href="@{/news}" th:text="#{nav.news}">News</a>
+            <i class="bi bi-chevron-right"></i>
+            <span class="fw-semibold text-body cb-crumb-title" th:text="${article.title}">Title</span>
+        </nav>
+
+        <div class="row g-4 align-items-start">
+            <article class="col-12 col-lg-8">
+                <div class="cb-panel cb-prose p-4 p-md-5">
+                    <div class="d-flex flex-wrap align-items-center gap-2 mb-3 small text-secondary">
+                        <a class="cb-chip" th:href="@{/news(category=${article.category})}" th:text="#{|news.category.${article.category}|}">Topic</a>
+                        <span><i class="bi bi-clock"></i> <span th:text="#{news.readMinutes(${article.readMinutes})}">5 min</span></span>
+                        <span th:text="${#temporals.format(article.publishedAt, 'dd/MM/yyyy')}">01/01/2026</span>
+                    </div>
+                    <h1 class="cb-h1 mb-3" th:text="${article.title}">Title</h1>
+                    <p class="lead text-secondary" th:text="${article.summary}">Summary</p>
+                    <div class="d-flex align-items-center gap-2 pb-4 mb-4 border-bottom small">
+                        <span class="cb-trust-icon"><i class="bi bi-pen"></i></span>
+                        <span th:text="#{news.by(${article.author})}">By ClinicBook</span>
+                    </div>
+
+                    <th:block th:each="b : ${blocks}">
+                        <h2 th:if="${b.kind == 'h'}" th:text="${b.text}">Heading</h2>
+                        <p th:if="${b.kind == 'p'}" th:text="${b.text}">Paragraph</p>
+                        <ul th:if="${b.kind == 'ul'}"><li th:each="i : ${b.items}" th:text="${i}">Item</li></ul>
+                        <ol th:if="${b.kind == 'ol'}"><li th:each="i : ${b.items}" th:text="${i}">Item</li></ol>
+                    </th:block>
+
+                    <div class="cb-note mt-4"><i class="bi bi-info-circle-fill"></i> <span th:text="#{news.disclaimer}">Disclaimer</span></div>
+                    <a class="btn btn-secondary mt-4" th:href="@{/news}"><i class="bi bi-arrow-left"></i> <span th:text="#{news.back}">Back to news</span></a>
+                </div>
+            </article>
+
+            <aside class="col-12 col-lg-4 d-grid gap-4">
+                <div th:replace="~{fragments/layout :: newsCta}"></div>
+                <div class="cb-panel" th:if="${!related.isEmpty()}">
+                    <h2 class="h6 fw-bold mb-3" th:text="#{news.related}">Related</h2>
+                    <a class="cb-related" th:each="r : ${related}" th:href="@{/news/{id}(id=${r.id})}">
+                        <span class="cb-article-icon sm" th:classappend="'cb-cat-' + ${r.category}"><i class="bi" th:classappend="${r.category.icon}"></i></span>
+                        <span class="min-w-0">
+                            <span class="d-block fw-semibold small" th:text="${r.title}">Title</span>
+                            <span class="d-block small text-secondary" th:text="#{news.readMinutes(${r.readMinutes})}">5 min</span>
+                        </span>
+                    </a>
+                </div>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.home})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main>
+    <section class="cb-hero">
+        <div class="container">
+            <div class="container px-0">
+                <div th:replace="~{fragments/layout :: alerts}"></div>
+                <div class="alert alert-info alert-dismissible fade show cb-autoclose" role="alert" th:if="${param.logout}">
+                    <span th:text="#{login.loggedOut}">Logged out</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <div class="alert alert-warning alert-dismissible fade show cb-autoclose" role="alert" th:if="${param.denied}">
+                    <span th:text="#{home.denied}">You are not allowed to open that page.</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            </div>
+
+            <div class="text-center mb-4">
+                <span class="cb-chip mb-3"><span class="cb-dot"></span> <span th:text="#{home.badge(${totalDoctors}, ${specialties.size()})}">badge</span></span>
+                <h1 class="mx-auto mb-3" style="max-width: 52rem" th:text="#{home.title}">Book a doctor online</h1>
+                <p class="lead" th:text="#{home.subtitle}">Choose a doctor, pick a time, done.</p>
+            </div>
+
+            <div class="cb-search mx-auto mb-3" style="max-width: 62rem">
+                <form th:action="@{/doctors}" method="get" class="row g-2 align-items-stretch">
+                    <div class="col-12 col-md-5">
+                        <div class="cb-field">
+                            <i class="bi bi-person-heart"></i>
+                            <div class="w-100 min-w-0">
+                                <label for="keyword" th:text="#{home.search.label}">Doctor</label>
+                                <input type="text" id="keyword" name="keyword" th:placeholder="#{home.search.placeholder}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-4">
+                        <div class="cb-field">
+                            <i class="bi bi-clipboard2-pulse"></i>
+                            <div class="w-100 min-w-0">
+                                <label for="specialtyId" th:text="#{home.search.specialty}">Specialty</label>
+                                <select id="specialtyId" name="specialtyId">
+                                    <option value="" th:text="#{home.search.allSpecialties}">All specialties</option>
+                                    <option th:each="s : ${specialties}" th:value="${s.id}" th:text="${s.localizedName}">Specialty</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12 col-md-3 d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="bi bi-search"></i> <span th:text="#{home.search.button}">Search</span>
+                        </button>
+                    </div>
+                </form>
+                <div class="d-flex flex-wrap align-items-center gap-2 pt-3 px-2" th:if="${!specialties.isEmpty()}">
+                    <span class="small text-secondary" th:text="#{home.popular}">Popular:</span>
+                    <a class="cb-chip cb-chip-soft" th:each="s, st : ${specialties}" th:if="${st.index < 4}"
+                       th:href="@{/doctors(specialtyId=${s.id})}" th:text="${s.localizedName}">Specialty</a>
+                </div>
+            </div>
+
+            <div class="cb-trust mt-4">
+                <div class="cb-trust-item">
+                    <span class="cb-trust-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                    <div class="lh-sm"><div class="fw-semibold small" th:text="#{home.trust1.title}">Instant</div>
+                        <div class="small text-secondary" th:text="#{home.trust1.text}">text</div></div>
+                </div>
+                <div class="cb-trust-item">
+                    <span class="cb-trust-icon alt"><i class="bi bi-calendar2-check"></i></span>
+                    <div class="lh-sm"><div class="fw-semibold small" th:text="#{home.trust2.title}">No double booking</div>
+                        <div class="small text-secondary" th:text="#{home.trust2.text}">text</div></div>
+                </div>
+                <div class="cb-trust-item">
+                    <span class="cb-trust-icon"><i class="bi bi-shield-lock-fill"></i></span>
+                    <div class="lh-sm"><div class="fw-semibold small" th:text="#{home.trust3.title}">Secure</div>
+                        <div class="small text-secondary" th:text="#{home.trust3.text}">text</div></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container pb-4" th:if="${!recentDoctors.isEmpty()}">
+        <div class="d-flex flex-wrap align-items-center gap-2 p-3 rounded-4 bg-white shadow-sm">
+            <span class="fw-semibold small me-2"><i class="bi bi-clock-history text-primary"></i> <span th:text="#{home.recent}">Recently viewed</span></span>
+            <a class="cb-chip cb-chip-soft" th:each="d : ${recentDoctors}" th:href="@{/doctors/{id}(id=${d.id})}">
+                <i class="bi bi-person-badge"></i> <span th:text="${d.displayName}">Doctor</span>
+                <span class="opacity-75" th:text="'· ' + ${d.specialty.localizedName}">Spec</span>
+            </a>
+        </div>
+    </section>
+
+    <section class="cb-section container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-2 mb-4">
+            <div>
+                <span class="cb-eyebrow" th:text="#{home.specialties.eyebrow}">Specialized care</span>
+                <h2 class="mb-1" th:text="#{home.specialties}">Specialties</h2>
+                <p class="text-secondary mb-0" th:text="#{home.specialties.text}">text</p>
+            </div>
+            <a class="cb-link" th:href="@{/doctors}"><span th:text="#{home.viewAll}">View all</span> <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+            <div class="col" th:each="s : ${specialties}">
+                <a class="cb-spec h-100" th:href="@{/doctors(specialtyId=${s.id})}">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <span class="cb-spec-icon"><i class="bi" th:classappend="${specialtyIcons.get(s.id)}"></i></span>
+                        <span class="cb-chip cb-chip-soft"
+                              th:text="#{home.doctorCount(${doctorCounts.get(s.id) ?: 0})}">3 doctors</span>
+                    </div>
+                    <div>
+                        <h3 th:text="${s.localizedName}">Specialty</h3>
+                        <p class="small text-secondary mb-0 mt-1" th:text="${s.description}">Description</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="cb-section cb-section-soft" th:if="${!featuredDoctors.isEmpty()}">
+        <div class="container">
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-2 mb-4">
+                <div>
+                    <span class="cb-eyebrow" th:text="#{home.featured.eyebrow}">Book now</span>
+                    <h2 class="mb-1" th:text="#{home.featured}">Featured doctors</h2>
+                    <p class="text-secondary mb-0" th:text="#{home.featured.text}">text</p>
+                </div>
+                <a class="cb-link" th:href="@{/doctors}"><span th:text="#{home.viewAll}">View all</span> <i class="bi bi-arrow-right"></i></a>
+            </div>
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                <div class="col" th:each="d : ${featuredDoctors}">
+                    <article class="cb-doctor">
+                        <div>
+                            <div class="d-flex align-items-start gap-3 mb-3">
+                                <div class="doctor-avatar"><i class="bi bi-person-badge"></i></div>
+                                <div>
+                                    <span class="cb-chip mb-1"><i class="bi bi-patch-check-fill"></i> <span th:text="#{home.verified}">Verified</span></span>
+                                    <h3 class="mb-0" th:text="${d.displayName}">Doctor</h3>
+                                    <div class="fw-semibold text-primary small" th:text="${d.specialty.localizedName}">Specialty</div>
+                                </div>
+                            </div>
+                            <div class="cb-doctor-meta mb-3">
+                                <i class="bi bi-award"></i>
+                                <span th:text="#{doctor.experience(${d.yearsExperience})}">10 years</span>
+                            </div>
+                            <p class="small text-secondary" style="display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden"
+                               th:text="${d.bio}">Bio</p>
+                        </div>
+                        <a class="btn btn-primary w-100 mt-2" th:href="@{/doctors/{id}(id=${d.id})}">
+                            <i class="bi bi-calendar2-plus"></i> <span th:text="#{doctor.viewSlots}">View slots</span>
+                        </a>
+                    </article>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cb-section container" th:if="${!latestNews.isEmpty()}">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-end gap-2 mb-4">
+            <div>
+                <span class="cb-eyebrow" th:text="#{news.eyebrow}">Medical knowledge</span>
+                <h2 class="mb-1" th:text="#{home.news.title}">Latest health news</h2>
+                <p class="text-secondary mb-0" th:text="#{home.news.text}">text</p>
+            </div>
+            <a class="cb-link" th:href="@{/news}"><span th:text="#{home.viewAll}">View all</span> <i class="bi bi-arrow-right"></i></a>
+        </div>
+        <div class="row row-cols-1 row-cols-md-3 g-4">
+            <div class="col" th:each="a : ${latestNews}">
+                <a class="cb-news-card" th:href="@{/news/{id}(id=${a.id})}">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="cb-article-icon sm" th:classappend="'cb-cat-' + ${a.category}"><i class="bi" th:classappend="${a.category.icon}"></i></span>
+                        <span class="small text-secondary"><i class="bi bi-clock"></i> <span th:text="#{news.readMinutes(${a.readMinutes})}">5 min</span></span>
+                    </div>
+                    <span class="cb-chip align-self-start mb-2" th:text="#{|news.category.${a.category}|}">Topic</span>
+                    <h3 class="h6 fw-bold" th:text="${a.title}">Title</h3>
+                    <p class="small text-secondary cb-clamp-2" th:text="${a.summary}">Summary</p>
+                    <span class="cb-link small mt-auto"><span th:text="#{news.read}">Read</span> <i class="bi bi-arrow-right"></i></span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <section class="cb-section container">
+        <div class="text-center mx-auto mb-5" style="max-width: 40rem">
+            <span class="cb-eyebrow" th:text="#{home.steps.eyebrow}">Effortless scheduling</span>
+            <h2 th:text="#{home.steps.title}">How it works</h2>
+            <p class="text-secondary" th:text="#{home.steps.text}">text</p>
+        </div>
+        <div class="row g-4">
+            <div class="col-12 col-md-4">
+                <div class="cb-step">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="cb-step-no">01</span><i class="bi bi-person-lines-fill fs-3 text-primary"></i>
+                        </div>
+                        <h3 class="h5 fw-semibold" th:text="#{home.step1.title}">Choose</h3>
+                        <p class="small text-secondary mb-0" th:text="#{home.step1.text}">text</p>
+                    </div>
+                    <div class="cb-step-foot"><i class="bi bi-check-circle-fill"></i> <span th:text="#{home.step1.foot}">foot</span></div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="cb-step">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="cb-step-no">02</span><i class="bi bi-calendar-week fs-3 text-primary"></i>
+                        </div>
+                        <h3 class="h5 fw-semibold" th:text="#{home.step2.title}">Pick</h3>
+                        <p class="small text-secondary mb-0" th:text="#{home.step2.text}">text</p>
+                    </div>
+                    <div class="cb-step-foot"><i class="bi bi-check-circle-fill"></i> <span th:text="#{home.step2.foot}">foot</span></div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="cb-step">
+                    <div>
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="cb-step-no">03</span><i class="bi bi-envelope-check fs-3 text-primary"></i>
+                        </div>
+                        <h3 class="h5 fw-semibold" th:text="#{home.step3.title}">Confirm</h3>
+                        <p class="small text-secondary mb-0" th:text="#{home.step3.text}">text</p>
+                    </div>
+                    <div class="cb-step-foot"><i class="bi bi-check-circle-fill"></i> <span th:text="#{home.step3.foot}">foot</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="container pb-5" sec:authorize="isAnonymous()">
+        <div class="cb-cta text-center">
+            <h2 class="mb-2" th:text="#{home.cta.title}">Ready?</h2>
+            <p class="text-secondary mx-auto" style="max-width: 36rem" th:text="#{home.cta.text}">text</p>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a class="btn btn-primary btn-lg" th:href="@{/register}"><i class="bi bi-person-plus"></i> <span th:text="#{nav.register}">Register</span></a>
+                <a class="btn btn-secondary btn-lg" th:href="@{/login}"><i class="bi bi-box-arrow-in-right"></i> <span th:text="#{nav.login}">Login</span></a>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

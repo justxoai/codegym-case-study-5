@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.mySchedule})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4 d-grid gap-4">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <section class="cb-dash-hero">
+            <div class="position-relative d-grid gap-3">
+                <div class="min-w-0">
+                    <span class="cb-chip bg-white mb-2"><i class="bi bi-hospital"></i>
+                        <span th:text="${doctor.specialty.localizedName}">Specialty</span></span>
+                    <h1 class="cb-h1 mb-1" th:text="${doctor.displayName}">Doctor</h1>
+                    <p class="text-secondary mb-0" th:text="#{schedule.subtitle}">Your week at a glance.</p>
+                </div>
+                <div class="row g-2">
+                    <div class="col-6 col-md-3"><div class="cb-kv-block h-100">
+                        <small class="text-secondary" th:text="#{schedule.metric.visits}">Visits this week</small>
+                        <strong class="fs-5" th:text="${visits}">0</strong></div></div>
+                    <div class="col-6 col-md-3"><div class="cb-kv-block h-100">
+                        <small class="text-secondary" th:text="#{schedule.metric.capacity}">Booked</small>
+                        <strong class="fs-5 text-primary" th:text="${capacity} + '%'">0%</strong></div></div>
+                    <div class="col-6 col-md-3"><div class="cb-kv-block h-100">
+                        <small class="text-secondary" th:text="#{schedule.metric.next}">Next patient</small>
+                        <strong class="text-truncate" th:if="${next != null}"
+                                th:text="${#temporals.format(next.slot.slotDate, 'dd/MM')} + ' ' + ${#temporals.format(next.slot.startTime, 'HH:mm')} + ' · ' + ${next.patient.user.fullName}">26/10 09:00</strong>
+                        <strong class="text-secondary fw-normal" th:if="${next == null}">-</strong></div></div>
+                    <div class="col-6 col-md-3"><div class="cb-kv-block h-100">
+                        <small class="text-secondary" th:text="#{schedule.metric.pending}">Pending</small>
+                        <strong class="fs-5" th:classappend="${pendingTotal > 0} ? 'text-danger'" th:text="${pendingTotal}">0</strong></div></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="cb-panel p-3 d-flex flex-wrap align-items-center justify-content-between gap-3">
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a class="icon-btn icon-btn-tonal" th:href="@{/doctor/schedule(week=${prevWeek})}"
+                   th:title="#{schedule.prev}" th:attr="aria-label=#{schedule.prev}"><i class="bi bi-chevron-left"></i></a>
+                <a class="btn btn-secondary btn-sm" th:href="@{/doctor/schedule}" th:text="#{schedule.thisWeek}">This week</a>
+                <a class="icon-btn icon-btn-tonal" th:href="@{/doctor/schedule(week=${nextWeek})}"
+                   th:title="#{schedule.next}" th:attr="aria-label=#{schedule.next}"><i class="bi bi-chevron-right"></i></a>
+                <strong class="ms-1" th:text="${#temporals.format(monday, 'dd/MM')} + ' – ' + ${#temporals.format(sunday, 'dd/MM/yyyy')}">23/10 – 29/10/2026</strong>
+            </div>
+            <div class="d-flex flex-wrap gap-3 small text-secondary">
+                <span class="d-inline-flex align-items-center gap-1"><span class="cb-legend is-free"></span> <span th:text="#{schedule.legend.free}">Free</span></span>
+                <span class="d-inline-flex align-items-center gap-1"><span class="cb-legend is-pending"></span> <span th:text="#{status.PENDING}">Pending</span></span>
+                <span class="d-inline-flex align-items-center gap-1"><span class="cb-legend is-confirmed"></span> <span th:text="#{status.CONFIRMED}">Confirmed</span></span>
+                <span class="d-inline-flex align-items-center gap-1"><span class="cb-legend is-completed"></span> <span th:text="#{status.COMPLETED}">Completed</span></span>
+            </div>
+        </section>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-9">
+                <div class="cb-panel p-3">
+                    <div class="text-center py-5" th:if="${rows.isEmpty()}">
+                        <span class="cb-avatar cb-avatar-lg mx-auto mb-3"><i class="bi bi-calendar2-plus"></i></span>
+                        <p class="text-secondary mb-0" th:text="#{schedule.empty}">No slots this week.</p>
+                    </div>
+
+                    <div class="cb-tt-wrap" th:unless="${rows.isEmpty()}">
+                        <div class="cb-tt">
+                            <div class="cb-tt-head cb-tt-corner" th:text="#{schedule.time}">Time</div>
+                            <div class="cb-tt-head" th:each="d : ${days}" th:classappend="${d == today} ? 'is-today'">
+                                <small th:text="${#temporals.dayOfWeekNameShort(d)}">Mon</small>
+                                <strong th:text="${#temporals.day(d)}">23</strong>
+                            </div>
+
+                            <th:block th:each="row : ${rows}">
+                                <div class="cb-tt-hour" th:text="${#numbers.formatInteger(row.hour, 2)} + ':00'">08:00</div>
+                                <div class="cb-tt-cell" th:each="cell, st : ${row.cells}" th:classappend="${days.get(st.index) == today} ? 'is-today'">
+                                    <div class="cb-tt-slot" th:each="s : ${cell}" th:with="a=${bySlot.get(s.id)}"
+                                         th:classappend="${(a == null ? 'is-free' : 'is-' + a.status.name().toLowerCase()) + (s.slotDate.isBefore(today) ? ' is-past' : '')}">
+                                        <div class="d-flex justify-content-between align-items-start gap-1">
+                                            <strong class="cb-tt-time" th:text="${#temporals.format(s.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(s.endTime, 'HH:mm')}">09:00 - 10:00</strong>
+                                            <form th:if="${a == null and !s.slotDate.isBefore(today)}" class="m-0" method="post"
+                                                  th:action="@{/doctor/slots/{id}/delete(id=${s.id})}"
+                                                  th:attr="data-confirm=#{confirm.delete.slot}, data-confirm-yes=#{common.delete}">
+                                                <input type="hidden" name="week" th:value="${monday}">
+                                                <button class="cb-tt-del" type="submit" th:title="#{common.delete}" th:attr="aria-label=#{common.delete}"><i class="bi bi-x-lg"></i></button>
+                                            </form>
+                                        </div>
+                                        <span class="cb-tt-name" th:if="${a != null}" th:text="${a.patient.user.fullName}">Patient</span>
+                                        <span class="cb-tt-sub" th:if="${a != null and a.reason != null and !a.reason.isBlank()}" th:text="${a.reason}">Reason</span>
+                                        <span class="cb-tt-sub" th:if="${a == null}" th:text="#{schedule.legend.free}">Free</span>
+                                    </div>
+                                </div>
+                            </th:block>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="col-12 col-lg-3 d-grid gap-3">
+                <div class="cb-panel p-4 d-grid gap-3">
+                    <h2 class="cb-h2 fs-6 m-0 d-flex align-items-center gap-2"><i class="bi bi-calendar2-plus text-primary"></i> <span th:text="#{slot.add.title}">Add a time slot</span></h2>
+                    <p class="small text-secondary mb-0" th:text="#{slot.add.help}">Pick the day, then the start and end time.</p>
+                    <form th:action="@{/doctor/slots}" th:object="${slotRequest}" method="post" class="d-grid gap-2" novalidate data-slot-form
+                          th:attr="data-msg-date=#{slot.client.date}, data-msg-start=#{slot.client.start}, data-msg-end=#{slot.client.end}, data-msg-order=#{slot.client.order}, data-msg-past=#{slot.client.past}">
+                        <div class="alert alert-danger py-2 small mb-0 d-none" role="alert" data-slot-error></div>
+                        <div>
+                            <label class="form-label small fw-semibold" for="slotDate" th:text="#{booking.date}">Date</label>
+                            <input type="date" class="form-control cb-date-input w-100" id="slotDate" th:field="*{slotDate}" required
+                                   th:min="${today}" th:max="${today.plusDays(90)}"
+                                   th:classappend="${#fields.hasErrors('slotDate')} ? 'is-invalid'">
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('slotDate')}" th:errors="*{slotDate}">error</div>
+                            <div class="form-text fw-semibold text-primary" data-weekday-for="#slotDate"
+                                 th:text="${slotRequest.slotDate != null} ? ${#temporals.dayOfWeekName(slotRequest.slotDate) + ', ' + #temporals.format(slotRequest.slotDate, 'dd/MM/yyyy')} : ''"></div>
+                        </div>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold" for="startTime" th:text="#{slot.start}">From</label>
+                                <input type="time" class="form-control cb-date-input w-100" id="startTime" th:field="*{startTime}" required
+                                       min="06:00" max="22:00" step="900"
+                                       th:classappend="${#fields.hasErrors('startTime')} ? 'is-invalid'">
+                                <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('startTime')}" th:errors="*{startTime}">error</div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold" for="endTime" th:text="#{slot.end}">To</label>
+                                <input type="time" class="form-control cb-date-input w-100" id="endTime" th:field="*{endTime}" required
+                                       min="06:00" max="22:00" step="900"
+                                       th:classappend="${#fields.hasErrors('endTime')} ? 'is-invalid'">
+                                <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('endTime')}" th:errors="*{endTime}">error</div>
+                            </div>
+                        </div>
+                        <button class="btn btn-success mt-1" type="submit"><i class="bi bi-plus-circle"></i> <span th:text="#{slot.add.submit}">Add</span></button>
+                    </form>
+                    <p class="small text-secondary mb-0" th:text="#{schedule.hint}">Free slots can be removed with the x button.</p>
+                </div>
+
+                <div class="cb-panel p-4 d-grid gap-3">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <h2 class="cb-h2 fs-6 m-0 d-flex align-items-center gap-2"><i class="bi bi-bell text-primary"></i> <span th:text="#{schedule.pending.title}">Waiting for you</span></h2>
+                        <span class="cb-chip" th:text="${pendingTotal}">0</span>
+                    </div>
+                    <p class="small text-secondary mb-0" th:if="${pending.isEmpty()}" th:text="#{doctorDash.noPending}">Nothing to confirm.</p>
+                    <div class="cb-kv-block" th:each="a : ${pending}">
+                        <div class="d-flex justify-content-between gap-2">
+                            <strong class="small text-truncate" th:text="${a.patient.user.fullName}">Patient</strong>
+                            <small class="text-primary flex-shrink-0" th:text="${#temporals.format(a.slot.slotDate, 'dd/MM')} + ' · ' + ${#temporals.format(a.slot.startTime, 'HH:mm')}">30/10 · 10:15</small>
+                        </div>
+                        <small class="text-secondary cb-clamp-1" th:if="${a.reason != null and !a.reason.isBlank()}" th:text="${a.reason}">Reason</small>
+                        <div class="d-flex gap-2 pt-1">
+                            <form class="m-0 flex-grow-1" method="post" th:action="@{/doctor/appointments/{id}/status(id=${a.id})}">
+                                <input type="hidden" name="status" value="CONFIRMED"><input type="hidden" name="week" th:value="${monday}">
+                                <button class="btn btn-success btn-sm w-100" type="submit" th:text="#{action.confirm}">Confirm</button>
+                            </form>
+                            <form class="m-0" method="post" th:action="@{/doctor/appointments/{id}/status(id=${a.id})}"
+                                  th:attr="data-confirm=#{doctorDash.confirmCancel}">
+                                <input type="hidden" name="status" value="CANCELLED"><input type="hidden" name="week" th:value="${monday}">
+                                <button class="btn btn-secondary btn-sm" type="submit" th:text="#{schedule.decline}">Decline</button>
+                            </form>
+                        </div>
+                    </div>
+                    <a class="small fw-semibold" th:href="@{/doctor/dashboard}"><span th:text="#{schedule.openConsole}">Open work console</span> <i class="bi bi-arrow-right"></i></a>
+                </div>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

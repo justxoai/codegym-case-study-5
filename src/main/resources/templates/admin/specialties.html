@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.specialties})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4 d-grid gap-4">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <section th:replace="~{fragments/layout :: adminHub('specialties', ${o.doctorCount}, ${o.specialtyCount})}"></section>
+
+        <div class="row g-4 align-items-start">
+            <div class="col-12 col-lg-8">
+                <div class="cb-panel text-center py-5" th:if="${loads.isEmpty()}">
+                    <span class="cb-avatar cb-avatar-lg mx-auto mb-3"><i class="bi bi-diagram-3"></i></span>
+                    <p class="text-secondary mb-0" th:text="#{adminHub.spec.empty}">No specialties yet.</p>
+                </div>
+
+                <div class="cb-spec-grid" th:unless="${loads.isEmpty()}">
+                    <div th:each="s : ${loads}">
+                        <article class="cb-spec" th:classappend="${editId != null and editId == s.specialty.id} ? 'is-editing'">
+                            <div class="d-flex align-items-start gap-3">
+                                <span class="cb-kpi-icon is-mint"><i class="bi bi-heart-pulse"></i></span>
+                                <div class="min-w-0">
+                                    <h2 class="h6 fw-bold mb-1 text-truncate" th:text="${s.specialty.localizedName}" th:title="${s.specialty.localizedName}">Cardiology</h2>
+                                    <small class="d-block text-secondary text-truncate mb-1" th:if="${s.specialty.nameEn != null and !s.specialty.nameEn.isBlank()}"
+                                           th:text="${#locale.language == 'en'} ? ${s.specialty.localizedName} : ${s.specialty.nameEn}">English name</small>
+                                    <p class="small text-secondary mb-0 cb-spec-desc"
+                                       th:text="${s.specialty.description != null and !s.specialty.description.isBlank()} ? ${s.specialty.description} : #{adminHub.spec.noDesc}">Description</p>
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <div class="cb-kv small">
+                                    <span class="text-secondary" th:text="#{adminHub.tab.doctors}">Doctors</span>
+                                    <a class="fw-bold text-decoration-none" th:href="@{/admin/doctors(specialty=${s.specialty.id})}" th:text="${s.doctors}">0</a>
+                                </div>
+                                <div>
+                                    <div class="small text-secondary mb-1" th:text="#{adminHub.spec.slots}">Slots, next 7 days</div>
+                                    <div th:replace="~{fragments/layout :: loadBar(${s.booked}, ${s.total}, ${s.percent})}"></div>
+                                </div>
+                            </div>
+
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-secondary btn-sm flex-grow-1" th:href="@{/admin/specialties/{id}/edit(id=${s.specialty.id})}">
+                                    <i class="bi bi-pencil"></i> <span th:text="#{common.edit}">Edit</span></a>
+                                <form class="m-0" th:action="@{/admin/specialties/{id}/delete(id=${s.specialty.id})}" method="post"
+                                      th:attr="data-confirm=#{confirm.delete.specialty(${s.specialty.localizedName})}, data-confirm-yes=#{common.delete}">
+                                    <button class="icon-btn icon-btn-danger" type="submit"
+                                            th:disabled="${s.doctors gt 0}"
+                                            th:title="${s.doctors gt 0} ? #{error.specialty.inUse} : #{common.delete}"
+                                            th:attr="aria-label=#{common.delete}"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="col-12 col-lg-4">
+                <section class="cb-panel p-4 d-grid gap-3 cb-sticky">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="cb-kpi-icon cb-kpi-icon-sm"><i class="bi" th:classappend="${editId == null} ? 'bi-plus-lg' : 'bi-pencil'"></i></span>
+                        <h2 class="cb-h2 fs-6 m-0" th:text="${editId == null} ? #{adminHub.spec.formNew} : #{adminHub.spec.formEdit}">New specialty</h2>
+                    </div>
+                    <form th:action="${editId == null} ? @{/admin/specialties} : @{/admin/specialties/{id}(id=${editId})}"
+                          th:object="${specialtyRequest}" method="post" novalidate class="d-grid gap-3">
+                        <div>
+                            <label class="form-label" for="name" th:text="#{field.name}">Name</label>
+                            <input type="text" class="form-control" id="name" th:field="*{name}"
+                                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{name}">error</div>
+                        </div>
+                        <div>
+                            <label class="form-label" for="nameEn" th:text="#{field.nameEn}">English name</label>
+                            <input type="text" class="form-control" id="nameEn" th:field="*{nameEn}"
+                                   th:classappend="${#fields.hasErrors('nameEn')} ? 'is-invalid'">
+                            <div class="invalid-feedback" th:errors="*{nameEn}">error</div>
+                            <div class="form-text" th:text="#{field.nameEn.hint}">Shown when the visitor uses English.</div>
+                        </div>
+                        <div>
+                            <label class="form-label" for="description" th:text="#{field.description}">Description</label>
+                            <textarea class="form-control" id="description" rows="4" th:field="*{description}"
+                                      th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"></textarea>
+                            <div class="invalid-feedback" th:errors="*{description}">error</div>
+                        </div>
+                        <div class="d-flex flex-wrap justify-content-end gap-2">
+                            <a th:if="${editId != null}" class="btn btn-secondary" th:href="@{/admin/specialties}" th:text="#{common.cancel}">Cancel</a>
+                            <button type="submit" class="btn btn-success"><i class="bi bi-check2"></i> <span th:text="#{common.save}">Save</span></button>
+                        </div>
+                    </form>
+                </section>
+            </aside>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.booking})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+        <div th:replace="~{fragments/layout :: bookingSteps(3)}"></div>
+
+        <div class="row justify-content-center mt-4">
+            <div class="col-12 col-lg-8 col-xl-7">
+                <div class="cb-panel p-4 p-md-5 d-grid gap-3">
+                    <div>
+                        <h1 class="cb-h1 fs-3 mb-1" th:text="#{booking.title}">Confirm your appointment</h1>
+                        <p class="text-secondary mb-0" th:text="#{booking.confirm.subtitle}">Check the details before you confirm.</p>
+                    </div>
+
+                    <div class="cb-visit-doctor">
+                        <span class="cb-avatar cb-avatar-lg"><i class="bi bi-person-badge"></i></span>
+                        <div class="min-w-0">
+                            <h2 class="h5 fw-semibold m-0" th:text="${slot.doctor.displayName}">Doctor</h2>
+                            <div class="d-flex flex-wrap align-items-center gap-2 mt-1">
+                                <span class="cb-chip cb-chip-soft" th:text="${slot.doctor.specialty.localizedName}">Specialty</span>
+                                <span class="small text-secondary"><i class="bi bi-award"></i>
+                                    <span th:text="#{doctor.experience(${slot.doctor.yearsExperience})}">10 years</span></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-12 col-sm-6">
+                            <div class="cb-kv-block">
+                                <small class="text-secondary" th:text="#{booking.date}">Date</small>
+                                <strong th:text="${#temporals.dayOfWeekName(slot.slotDate)} + ', ' + ${#temporals.format(slot.slotDate, 'dd/MM/yyyy')}">Thursday</strong>
+                            </div>
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <div class="cb-kv-block">
+                                <small class="text-secondary" th:text="#{booking.time}">Time</small>
+                                <strong th:text="${#temporals.format(slot.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(slot.endTime, 'HH:mm')}">09:00</strong>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="cb-kv-block">
+                                <small class="text-secondary" th:text="#{booking.reason}">Reason</small>
+                                <strong th:text="${reason}">Reason</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="cb-note"><i class="bi bi-info-circle"></i>
+                        <span><strong th:text="#{booking.summary.pendingTitle}">Needs confirmation:</strong> <span th:text="#{booking.summary.pending}">pending</span></span></div>
+
+                    <form th:action="@{/booking/confirm}" method="post" class="d-flex flex-column flex-sm-row justify-content-between gap-2 m-0">
+                        <div class="d-flex flex-column flex-sm-row gap-2">
+                            <a class="btn btn-secondary" th:href="@{/booking(slotId=${slot.id})}"><i class="bi bi-pencil"></i> <span th:text="#{booking.edit}">Edit</span></a>
+                            <button type="submit" class="btn btn-outline-danger" th:formaction="@{/booking/cancel}">
+                                <i class="bi bi-x-circle"></i> <span th:text="#{common.cancel}">Cancel</span></button>
+                        </div>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check2-circle"></i> <span th:text="#{booking.confirm}">Confirm booking</span></button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.register})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+            <div class="d-flex align-items-center gap-2 small fw-semibold text-secondary">
+                <i class="bi bi-shield-check text-primary"></i>
+                <span th:text="#{register.portal}">Secure patient registration</span>
+            </div>
+            <span class="cb-chip cb-chip-soft"><span class="cb-dot"></span> <span th:text="#{register.pill}">Passwords are encrypted</span></span>
+        </div>
+
+        <div class="row g-4 align-items-start">
+            <aside class="col-12 col-lg-5 d-grid gap-3">
+                <div class="cb-panel cb-hero-card">
+                    <span class="cb-chip cb-chip-soft mb-3"><i class="bi bi-heart-pulse-fill text-primary"></i> <span th:text="#{register.badge}">Care first</span></span>
+                    <h2 class="cb-h1 fs-3 mb-2" th:text="#{register.brand.title}">Get started</h2>
+                    <p class="text-secondary" th:text="#{register.brand.text}">Text</p>
+
+                    <div class="d-grid gap-2 mt-3">
+                        <div class="cb-benefit">
+                            <span class="cb-trust-icon"><i class="bi bi-lightning-charge-fill"></i></span>
+                            <div><div class="fw-semibold" th:text="#{home.trust1.title}">t</div>
+                                <div class="small text-secondary" th:text="#{home.trust1.text}">t</div></div>
+                        </div>
+                        <div class="cb-benefit">
+                            <span class="cb-trust-icon"><i class="bi bi-calendar2-check"></i></span>
+                            <div><div class="fw-semibold" th:text="#{home.trust2.title}">t</div>
+                                <div class="small text-secondary" th:text="#{home.trust2.text}">t</div></div>
+                        </div>
+                        <div class="cb-benefit">
+                            <span class="cb-trust-icon"><i class="bi bi-person-lines-fill"></i></span>
+                            <div><div class="fw-semibold" th:text="#{register.benefit3.title}">t</div>
+                                <div class="small text-secondary" th:text="#{register.benefit3.text}">t</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cb-panel d-flex align-items-center justify-content-between gap-3 py-3">
+                    <span class="text-secondary" th:text="#{register.haveAccount}">Have an account?</span>
+                    <a class="btn btn-secondary btn-sm" th:href="@{/login}"><i class="bi bi-box-arrow-in-right"></i> <span th:text="#{nav.login}">Login</span></a>
+                </div>
+            </aside>
+
+            <section class="col-12 col-lg-7">
+                <div class="cb-panel p-4 p-md-5">
+                    <h1 class="cb-h1 fs-3 mb-1" th:text="#{register.title}">Create account</h1>
+                    <p class="text-secondary mb-4" th:text="#{register.welcomeText}">Fill in a few details.</p>
+
+                    <form th:action="@{/register}" th:object="${registerRequest}" method="post" novalidate
+                          class="row g-3" data-password-confirm>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small" for="fullName" th:text="#{field.fullName}">Full name</label>
+                            <div class="cb-input">
+                                <i class="bi bi-person-vcard"></i>
+                                <input type="text" class="form-control" id="fullName" th:field="*{fullName}" autocomplete="name"
+                                       th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid'">
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('fullName')}" th:errors="*{fullName}">error</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold small" for="email" th:text="#{field.email}">Email</label>
+                            <div class="cb-input">
+                                <i class="bi bi-envelope"></i>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" autocomplete="email"
+                                       th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'">
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('email')}" th:errors="*{email}">error</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold small" for="phone" th:text="#{field.phone}">Phone</label>
+                            <div class="cb-input">
+                                <i class="bi bi-telephone"></i>
+                                <input type="text" class="form-control" id="phone" th:field="*{phone}" autocomplete="tel"
+                                       th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'">
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}">error</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small" for="username" th:text="#{field.username}">Username</label>
+                            <div class="cb-input">
+                                <i class="bi bi-person"></i>
+                                <input type="text" class="form-control" id="username" th:field="*{username}" autocomplete="username"
+                                       th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'">
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('username')}" th:errors="*{username}">error</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold small" for="password" th:text="#{field.password}">Password</label>
+                            <div class="cb-input">
+                                <i class="bi bi-key"></i>
+                                <input type="password" class="form-control" id="password" th:field="*{password}" autocomplete="new-password"
+                                       data-strength-for="#pwMeter" th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'">
+                                <button type="button" class="cb-input-toggle" data-toggle-password="#password"
+                                        th:title="#{auth.showPassword}" th:attr="aria-label=#{auth.showPassword}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('password')}" th:errors="*{password}">error</div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label fw-semibold small" for="confirmPassword" th:text="#{field.confirmPassword}">Confirm password</label>
+                            <div class="cb-input">
+                                <i class="bi bi-lock"></i>
+                                <input type="password" class="form-control" id="confirmPassword" autocomplete="new-password">
+                                <button type="button" class="cb-input-toggle" data-toggle-password="#confirmPassword"
+                                        th:title="#{auth.showPassword}" th:attr="aria-label=#{auth.showPassword}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback d-none" id="confirmMismatch" th:text="#{register.passwordMismatch}">Passwords do not match.</div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="cb-meter" id="pwMeter" data-level="0" th:attr="data-labels=#{register.strength.labels}">
+                                <div class="d-flex flex-wrap justify-content-between gap-2 small">
+                                    <span><i class="bi bi-shield-check"></i> <span th:text="#{register.strength}">Strength</span>:
+                                        <strong data-meter-label>-</strong></span>
+                                    <span class="text-secondary" th:text="#{register.strength.hint}">hint</span>
+                                </div>
+                                <div class="cb-meter-bars"><span></span><span></span><span></span><span></span></div>
+                            </div>
+                        </div>
+
+                        <div class="col-12 d-grid">
+                            <button type="submit" class="btn btn-success btn-lg mt-1">
+                                <span th:text="#{register.submit}">Register</span> <i class="bi bi-arrow-right"></i>
+                            </button>
+                        </div>
+                        <div class="col-12">
+                            <div class="cb-note"><i class="bi bi-lock"></i> <span th:text="#{register.secureNote}">Your data is private.</span></div>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.login})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4 py-lg-5">
+        <div class="cb-auth">
+            <aside th:replace="~{fragments/layout :: authBrand(#{auth.brand.title}, #{auth.brand.text})}"></aside>
+
+            <section class="cb-auth-form">
+                <div class="mx-auto w-100" style="max-width: 28rem">
+                    <h2 class="cb-h1 fs-2 mb-1" th:text="#{login.welcome}">Welcome back</h2>
+                    <p class="text-secondary mb-4" th:text="#{login.welcomeText}">Sign in to continue.</p>
+
+                    <div class="alert alert-danger" th:if="${param.error}" th:text="#{error.login.invalid}">Wrong login</div>
+                    <div class="alert alert-success cb-autoclose" th:if="${param.registered}" th:text="#{login.registered}">Registered</div>
+
+                    <form th:action="@{/login}" method="post" class="d-grid gap-3">
+                        <div>
+                            <label class="form-label fw-semibold small" for="username" th:text="#{field.username}">Username</label>
+                            <div class="cb-input">
+                                <i class="bi bi-person"></i>
+                                <input type="text" class="form-control" id="username" name="username" required autofocus
+                                       autocomplete="username" th:placeholder="#{login.username.placeholder}">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="form-label fw-semibold small" for="password" th:text="#{field.password}">Password</label>
+                            <div class="cb-input">
+                                <i class="bi bi-key"></i>
+                                <input type="password" class="form-control" id="password" name="password" required
+                                       autocomplete="current-password" th:placeholder="#{login.password.placeholder}">
+                                <button type="button" class="cb-input-toggle" data-toggle-password="#password"
+                                        th:title="#{auth.showPassword}" th:attr="aria-label=#{auth.showPassword}">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-lg mt-2">
+                            <span th:text="#{login.submit}">Log in</span> <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </form>
+
+                    <p class="text-center mt-4 mb-0">
+                        <span class="text-secondary" th:text="#{login.noAccount}">No account?</span>
+                        <a class="cb-link ms-1" th:href="@{/register}" th:text="#{nav.register}">Register</a>
+                    </p>
+
+                    <div class="cb-note mt-4"><i class="bi bi-shield-check"></i> <span th:text="#{auth.secure}">Secure</span></div>
+                </div>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>

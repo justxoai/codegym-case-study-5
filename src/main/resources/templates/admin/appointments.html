@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" th:lang="${#locale.language}">
+<head th:replace="~{fragments/layout :: head(#{page.appointments})}"></head>
+<body>
+<header th:replace="~{fragments/layout :: navbar}"></header>
+
+<main class="cb-page">
+    <div class="container py-4 d-grid gap-4">
+        <div th:replace="~{fragments/layout :: alerts}"></div>
+
+        <section th:replace="~{fragments/layout :: adminOps('appointments', ${appointmentTotal}, ${auditTotal})}"></section>
+
+        <section class="cb-panel p-3 p-md-4">
+            <form th:action="@{/admin/appointments}" method="get" data-autosubmit class="row g-2 align-items-center">
+                <input type="hidden" name="status" th:value="${status}">
+                <div class="col-12 col-xl">
+                    <div class="cb-input">
+                        <i class="bi bi-search"></i>
+                        <input type="search" class="form-control" name="keyword" th:value="${keyword}" th:placeholder="#{adminOps.search}">
+                    </div>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <select class="form-select cb-select-pill" name="specialty" th:attr="aria-label=#{booking.specialty}">
+                        <option value="" th:text="#{adminHub.filter.all}">All specialties</option>
+                        <option th:each="s : ${specialties}" th:value="${s.id}" th:text="${s.localizedName}"
+                                th:selected="${specialty != null and specialty == s.id}">Specialty</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto d-flex align-items-center gap-2">
+                    <a class="icon-btn icon-btn-tonal" th:href="@{/admin/appointments(date=${day.minusDays(1)}, specialty=${specialty}, status=${status}, keyword=${keyword})}"
+                       th:title="#{doctorDash.prevDay}" th:attr="aria-label=#{doctorDash.prevDay}"><i class="bi bi-chevron-left"></i></a>
+                    <input type="date" class="form-control cb-date-input" name="date" th:value="${day}" th:attr="aria-label=#{booking.date}">
+                    <a class="icon-btn icon-btn-tonal" th:href="@{/admin/appointments(date=${day.plusDays(1)}, specialty=${specialty}, status=${status}, keyword=${keyword})}"
+                       th:title="#{doctorDash.nextDay}" th:attr="aria-label=#{doctorDash.nextDay}"><i class="bi bi-chevron-right"></i></a>
+                    <a class="btn btn-secondary btn-sm" th:unless="${day == today}" th:href="@{/admin/appointments(specialty=${specialty}, status=${status}, keyword=${keyword})}" th:text="#{doctorDash.today}">Today</a>
+                    <span class="cb-chip" th:if="${day == today}" th:text="#{doctorDash.today}">Today</span>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button type="submit" class="btn btn-secondary"><i class="bi bi-funnel"></i> <span th:text="#{adminHub.filter.apply}">Filter</span></button>
+                </div>
+            </form>
+        </section>
+
+        <section class="row g-3">
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminOps.stat.day}">Appointments that day</div>
+                        <div class="cb-mini-value" th:text="${sched.total}">0</div>
+                        <small class="text-secondary" th:text="#{adminDash.kpi.today.unit}">visits</small>
+                    </div>
+                    <span class="cb-kpi-icon is-mint"><i class="bi bi-calendar-check"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminOps.stat.slots}">Slots booked</div>
+                        <div class="cb-mini-value text-primary" th:text="${sched.occupancyPercent} + '%'">0%</div>
+                        <small class="text-secondary" th:text="#{adminOps.stat.slots.note(${sched.slotBooked}, ${sched.slotTotal})}">3 of 8 slots</small>
+                    </div>
+                    <span class="cb-kpi-icon is-sky"><i class="bi bi-grid-3x3-gap"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminOps.stat.pending}">Waiting for confirmation</div>
+                        <div class="cb-mini-value" th:text="${sched.pending}">0</div>
+                        <small class="text-secondary" th:text="#{adminOps.stat.confirmed(${sched.confirmed}, ${sched.completed})}">2 confirmed, 1 completed</small>
+                    </div>
+                    <span class="cb-kpi-icon"><i class="bi bi-hourglass-split"></i></span>
+                </article>
+            </div>
+            <div class="col-12 col-sm-6 col-xl-3">
+                <article class="cb-mini">
+                    <div>
+                        <div class="cb-kpi-label" th:text="#{adminOps.stat.cancelled}">Cancelled</div>
+                        <div class="cb-mini-value" th:text="${sched.cancelled}">0</div>
+                        <small class="text-secondary" th:text="#{adminOps.stat.cancelled.note}">The slots were given back</small>
+                    </div>
+                    <span class="cb-kpi-icon is-alert"><i class="bi bi-x-circle"></i></span>
+                </article>
+            </div>
+        </section>
+
+        <section class="cb-panel p-4 d-grid gap-3">
+            <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="cb-kpi-icon cb-kpi-icon-sm"><i class="bi bi-calendar2-week"></i></span>
+                    <div>
+                        <h2 class="cb-h2 fs-6 m-0" th:text="#{adminOps.sched.title}">Master schedule</h2>
+                        <p class="small text-secondary mb-0"
+                           th:text="${#temporals.dayOfWeekName(day)} + ', ' + ${#temporals.format(day, 'dd/MM/yyyy')}">Thursday, 26/10/2026</p>
+                    </div>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-3 small text-secondary">
+                    <span><i class="cb-legend is-free"></i> <span th:text="#{adminOps.sched.free}">Free</span></span>
+                    <span><i class="cb-legend is-pending"></i> <span th:text="#{status.PENDING}">Pending</span></span>
+                    <span><i class="cb-legend is-confirmed"></i> <span th:text="#{status.CONFIRMED}">Confirmed</span></span>
+                    <span><i class="cb-legend is-completed"></i> <span th:text="#{status.COMPLETED}">Completed</span></span>
+                </div>
+            </div>
+
+            <div class="text-center py-4" th:if="${sched.rows.isEmpty()}">
+                <span class="cb-avatar cb-avatar-lg mx-auto mb-3"><i class="bi bi-calendar2-x"></i></span>
+                <p class="text-secondary mb-0" th:text="#{adminOps.sched.empty}">No slots on this day.</p>
+            </div>
+
+            <div class="table-responsive" th:unless="${sched.rows.isEmpty()}">
+                <table class="table align-middle mb-0 cb-grid">
+                    <thead>
+                    <tr>
+                        <th class="cb-grid-time" th:text="#{booking.time}">Time</th>
+                        <th th:each="d : ${sched.doctors}">
+                            <strong class="d-block text-truncate" th:text="${d.displayName}">Dr. Name</strong>
+                            <small class="text-secondary fw-normal text-truncate d-block" th:text="${d.specialty.localizedName}">Specialty</small>
+                        </th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="row : ${sched.rows}">
+                        <td class="cb-grid-time"><strong th:text="${#temporals.format(row.time, 'HH:mm')}">09:00</strong></td>
+                        <td th:each="c : ${row.cells}">
+                            <span class="text-secondary" th:if="${c.slot == null}">&ndash;</span>
+
+                            <div class="cb-adm-cell is-free" th:if="${c.slot != null and c.appointment == null}">
+                                <i class="bi bi-plus-circle"></i> <span th:text="#{adminOps.sched.free}">Free</span>
+                            </div>
+
+                            <div class="cb-adm-cell" th:if="${c.appointment != null}"
+                                 th:classappend="'is-' + ${#strings.toLowerCase(c.appointment.status.name())}">
+                                <div class="d-flex align-items-start justify-content-between gap-2">
+                                    <strong class="small text-truncate" th:text="${c.appointment.patient.user.fullName}">Patient</strong>
+                                    <a class="small text-secondary text-decoration-none flex-shrink-0"
+                                       th:href="@{/admin/audit(appointment=${c.appointment.id})}"
+                                       th:title="#{adminOps.history.log}" th:text="'#' + ${c.appointment.id}">#1</a>
+                                </div>
+                                <div class="small text-secondary cb-clamp-1" th:if="${c.appointment.reason != null and !c.appointment.reason.isBlank()}"
+                                     th:text="${c.appointment.reason}">Reason</div>
+                                <span th:replace="~{fragments/layout :: statusBadge(${c.appointment.status})}"></span>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="cb-panel p-4 d-grid gap-3">
+            <div class="d-flex align-items-center gap-3">
+                <span class="cb-kpi-icon cb-kpi-icon-sm"><i class="bi bi-clock-history"></i></span>
+                <div>
+                    <h2 class="cb-h2 fs-6 m-0" th:text="#{adminOps.history.title}">Appointment history</h2>
+                    <p class="small text-secondary mb-0" th:text="#{adminOps.history.subtitle}">Newest bookings first.</p>
+                </div>
+            </div>
+            <p class="cb-note small mb-0"><i class="bi bi-eye"></i> <span th:text="#{adminOps.readonly}">Admins only watch appointments.</span></p>
+
+            <div class="cb-pillbar">
+                <a class="cb-pill" data-keep-scroll th:each="st : ${ {'ALL','PENDING','CONFIRMED','COMPLETED','CANCELLED'} }"
+                   th:classappend="${st == status} ? 'active'"
+                   th:href="@{/admin/appointments(date=${day}, specialty=${specialty}, status=${st}, keyword=${keyword})}">
+                    <span th:text="#{|status.${st}|}">All</span>
+                    <span class="cb-tab-count" th:text="${history.counts.get(st)}">0</span>
+                </a>
+            </div>
+
+            <div class="text-center py-4" th:if="${history.rows.isEmpty()}">
+                <span class="cb-avatar cb-avatar-lg mx-auto mb-3"><i class="bi bi-inbox"></i></span>
+                <p class="text-secondary mb-0" th:text="#{adminOps.history.empty}">No matching appointments.</p>
+            </div>
+
+            <div class="table-responsive" th:unless="${history.rows.isEmpty()}">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th th:text="#{adminOps.history.col.visit}">Visit</th>
+                        <th th:text="#{field.patient}">Patient</th>
+                        <th th:text="#{booking.doctor}">Doctor</th>
+                        <th class="d-none d-lg-table-cell" th:text="#{booking.reason}">Reason</th>
+                        <th th:text="#{common.status}">Status</th>
+                        <th></th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="a : ${history.rows}">
+                        <td>
+                            <strong th:text="${a.id}">1</strong>
+                            <small class="d-block text-secondary" th:text="${#temporals.format(a.createdAt, 'dd/MM HH:mm')}">26/10 09:00</small>
+                        </td>
+                        <td class="text-nowrap">
+                            <strong th:text="${#temporals.format(a.slot.slotDate, 'dd/MM/yyyy')}">26/10/2026</strong>
+                            <small class="d-block text-secondary"
+                                   th:text="${#temporals.format(a.slot.startTime, 'HH:mm')} + ' - ' + ${#temporals.format(a.slot.endTime, 'HH:mm')}">09:00 - 10:00</small>
+                        </td>
+                        <td th:text="${a.patient.user.fullName}">Patient</td>
+                        <td>
+                            <span class="d-block" th:text="${a.doctor.displayName}">Dr. Name</span>
+                            <small class="text-secondary" th:text="${a.doctor.specialty.localizedName}">Specialty</small>
+                        </td>
+                        <td class="d-none d-lg-table-cell small text-secondary">
+                            <span class="cb-clamp-1 d-block" th:text="${a.reason}">Reason</span>
+                        </td>
+                        <td><span th:replace="~{fragments/layout :: statusBadge(${a.status})}"></span></td>
+                        <td class="text-end text-nowrap">
+                            <a class="icon-btn icon-btn-sm icon-btn-tertiary"
+                               th:href="@{/admin/audit(appointment=${a.id})}"
+                               th:title="#{adminOps.history.log}" th:attr="aria-label=#{adminOps.history.log}"><i class="bi bi-journal-text"></i></a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-grid gap-2" th:unless="${history.rows.isEmpty()}">
+                <p class="small text-secondary text-center mb-0"
+                   th:text="#{adminOps.history.showing(${history.page.from}, ${history.page.to}, ${history.page.total})}">Showing 1-10 of 25</p>
+                <div th:replace="~{fragments/layout :: pager(${history.page})}"></div>
+            </div>
+        </section>
+    </div>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
