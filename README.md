@@ -30,7 +30,7 @@ Bệnh nhân chọn chuyên khoa → bác sĩ → khung giờ trống và đặt
 ## Chạy ứng dụng
 
 1. Cài JDK 17 và MySQL 8.
-2. Tạo database `clinicbook` (utf8mb4) và nạp dữ liệu .
+2. Tạo database trống `clinicbook` (utf8mb4), ví dụ: `CREATE DATABASE clinicbook CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`. Khi chạy lần đầu, Hibernate (`ddl-auto=update`) tự tạo các bảng.
 3. Cấu hình kết nối trong `src/main/resources/application.properties` hoặc bằng biến môi trường: `DB_HOST` (mặc định `localhost`), `DB_PORT` (`3306`), `DB_NAME` (`clinicbook`), `DB_USERNAME` (`root`), `DB_PASSWORD`, `JWT_SECRET` (chuỗi Base64, tối thiểu 32 byte; token luôn ký bằng HS256), `PORT` (`8080`).
 4. Chạy:
 
@@ -39,6 +39,8 @@ Bệnh nhân chọn chuyên khoa → bác sĩ → khung giờ trống và đặt
 ```
 
 Mở <http://localhost:8080>.
+
+Các tài khoản dưới đây có sẵn khi database đã được nạp dữ liệu mẫu của tác giả. Với database trống, hãy đăng ký bệnh nhân tại `/register`.
 
 | Vai trò | Tài khoản | Mật khẩu |
 |---|---|---|

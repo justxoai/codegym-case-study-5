@@ -55,6 +55,8 @@ Tài liệu này ghi lại yêu cầu của đề bài (CodeGym – Spring Boot)
 
 ## 4. Tài khoản dùng thử
 
+Có sẵn khi database đã được nạp dữ liệu mẫu của tác giả. Với database trống, đăng ký bệnh nhân tại `/register`.
+
 | Vai trò | Tài khoản | Mật khẩu |
 |---|---|---|
 | Admin | `admin` | `admin123` |
